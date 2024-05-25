@@ -9,7 +9,7 @@ from _thread import start_new_thread
 from client_connection import Connection
 
 # Mensagem do Dia
-MOTD = """servidor"""
+MOTD = "Welcome to the Internet Relay Network"
 
 
 class Server:

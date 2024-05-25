@@ -1,27 +1,21 @@
-from pprint import pprint
-<<<<<<< HEAD:src/server/connection.py
+from utils.logger import Logger
 
 
 class Connection:
+
+    class ConnectionConfig:
+        def __init__(self):
+            self.debugmode = False
+
     def __init__(self, conn):
         self.conn = conn
         self.buffer = ""
-=======
-import logging
 
-# Configurar o log
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s:%(message)s', handlers=[logging.FileHandler("server.log"), logging.StreamHandler()])
 
-MOTD = "Welcome to the Internet Relay Network"
-
-class Client:
     def __init__(self, conn):
         self.conn = conn
         self.buffer = ""
-        self.nickname = None
-        self.nickname_max_size = 9
         self.username = None
-        logging.debug(f"Client connected")
 
     def send_data(self, data: str):
         try:
@@ -29,18 +23,13 @@ class Client:
             logging.debug(f"Data sent: {data}")
         except Exception as e:
             logging.error(f"Error while sending data: {e}")
->>>>>>> origin/main:src/server/client_server.py
 
     def incoming_data(self):
         try:
             data = self.conn.recv(512).decode()
             if not data:
-<<<<<<< HEAD:src/server/connection.py
-                return False
-=======
                 logging.warning("Received empty data")
                 return False  # TODO do something when request is empty
->>>>>>> origin/main:src/server/client_server.py
             self.buffer += data
             logging.debug(f"Data received:{data}")
             while "\r\n" in self.buffer:
@@ -87,9 +76,6 @@ class Client:
                 logging.debug("PING command received")
                 self.handle_command_ping(command_params)
             case "QUIT":
-<<<<<<< HEAD:src/server/connection.py
-                pass
-=======
                 logging.debug("QUIT command received")
             case _:
                 logging.warning(f"Unknown command received: {command}")
@@ -145,4 +131,3 @@ class Client:
                 logging.debug(f"Invalid character in nickname: {char}")
                 return False
         return True
->>>>>>> origin/main:src/server/client_server.py
