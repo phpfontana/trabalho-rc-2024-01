@@ -1,62 +1,60 @@
+from errors import InvalidNicknameError
+
 from utils.logger import Logger
 
 
 class User:
-    class Configuration:
-        def __init__(self, debug_mode=False):
-            self.nickname_max_size = 9
+    class UserConfig:
+        def __init__(self, nickname_max_size=9, debug_mode=False):
+            self.nickname_max_size = nickname_max_size
             self.debug_mode = debug_mode
 
-    def __init__(self, debug_mode=False):
+    def __init__(
+        self,
+        nickname_max_size=9,
+        debug_mode=False,
+    ):
         self.nickname = None
         self.username = None
-        self.configuration = self.Configuration()
+        self.configuration = self.UserConfig(nickname_max_size, debug_mode)
 
-        if debug_mode:
-            self.logger = Logger(".server.log")
+        self.logger = Logger(".server.log", debug_mode)
 
-    def handle_command_nick(self, nickname: str) -> bool:
+    def handle_command_nick(self, nickname: str) -> str:
         if self.is_valid_nickname(nickname):
             self.nickname = nickname
-            if self.configuration.debug_mode:
-                self.logger.info(f"Nickname set: {nickname}")
-            return True
+            success_nickname_message = (
+                f"001 {
+                    self.nickname} :Welcome to the Internet"
+                f" Relay Network {self.nickname}\r\n"
+            )
+            self.logger.info(f"Nickname set: {nickname}")
+            return success_nickname_message
         else:
-            if self.configuration.debug_mode:
-                self.logger.warning(f"Invalid nickname set attempt: {nickname}")
-            return False
+            self.logger.warning(f"Invalid nickname set attempt: {nickname}")
+            raise InvalidNicknameError(nickname)
 
     def handle_command_user(self, username: str) -> bool:
-        if self.is_registered():
-            if self.configuration.debug_mode:
-                self.logger.warning("User already registered")
-            return False
-        else:
-            if self.configuration.debug_mode:
-                self.logger.info(f"Username set: {self.username}")
-            self.username = username
-            return True
+        self.username = username
+        self.logger.info(f"Username set: {self.username}")
+        return True
 
-    def handle_command_motd(self, motd):
-        motd_message = (
-            f":server 375 {self.nickname} :- Message of the day\r\n:server 372"
-            f" {
-                self.nickname} :- {motd}\r\n:server 376"
-            f" {self.nickname} :End of MOTD command\r\n"
+    def handle_command_motd(self, message_of_the_day, host) -> str:
+        message_of_the_day = (
+            f":server 375 {self.nickname} :- {host} Message of the day\r\n"
+            f":server 372 {self.nickname} :- {message_of_the_day}\r\n"
+            f":server 376 {self.nickname} :End of /MOTD command\r\n"
         )
-        self.send_data(motd_message)
-        if self.configuration.debug_mode:
-            self.logger.debug(f"MOTD sent to {self.nickname}")
+        self.logger.debug(f"MOTD created - {message_of_the_day}")
+        return message_of_the_day
 
-    def handle_command_ping(self, command_params):
-        self.send_data(f"PONG :{command_params[0]}\r\n")
-        if self.configuration.debug_mode:
-            self.logger.debug(f"PONG sent to {self.nickname}")
+    def handle_command_ping(self, ping_payload):
+        self.send_data(f"PONG :{ping_payload}\r\n")
+        self.logger.debug(f"PONG sent to {self.nickname}")
 
     def is_registered(self) -> bool:
         registered = self.nickname and self.username
-        if self.configuration.debug_mode:
-            self.logger.debug(f"Is registered: {registered}")
+        self.logger.debug(f"Is registered: {registered}")
         return registered
 
     def is_valid_nickname(self, nickname: str) -> bool:
@@ -74,7 +72,6 @@ class User:
             if char.isalnum() or char == "_":
                 pass
             else:
-                if self.configuration.debug_mode:
-                    self.logger.debug(f"Invalid character in nickname: {char}")
+                self.logger.debug(f"Invalid character in nickname: {char}")
                 return False
         return True

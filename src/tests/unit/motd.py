@@ -6,3 +6,5 @@ class testCommandMotd(unittest.TestCase):
 
     def setUp(self):
         self.user = User
+
+    def 

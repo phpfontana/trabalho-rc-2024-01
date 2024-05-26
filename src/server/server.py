@@ -1,25 +1,20 @@
 #!/usr/bin/python
 
 import socket
-import queue
-import time
-from random import randint
-from collections import deque
 from _thread import start_new_thread
-from client_connection import Connection
-
-# Mensagem do Dia
-MOTD = "Welcome to the Internet Relay Network"
+from collections import deque
+from connection import ClientConnection
 
 
 class Server:
-
-    def __init__(self, port=6667):
-        self.conns = deque()
+    def __init__(self, port=6667, debug_mode=False):
+        self.connections = deque()
         self.port = port
+        self.message_of_the_day = "Welcome to the Internet Relay Network"
+        self.debug_mode = debug_mode
 
-    def run(self, conn):
-        client = Connection(conn)
+    def run(self, connection):
+        client = ClientConnection(connection, self.message_of_the_day, self.debug_mode)
         while client.incoming_data():
             pass
 
