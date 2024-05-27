@@ -1,7 +1,8 @@
-from server.errors import InvalidNicknameError
-from utils.logger import Logger
-from server.user import User
 from typing import Any
+
+from server.errors import InvalidNicknameError
+from server.user import User
+from utils.logger import Logger
 
 
 class ClientConnection:

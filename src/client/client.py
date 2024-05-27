@@ -3,11 +3,10 @@
 
 import signal
 import socket
+from time import time
 
 class Cliente(Exception):
     def __init__(self):
-        # Propriedades do cliente
-        # Exemplo:
         self.conectado = False
 
         # Exceção para alarme de tempo (não alterar esta linha)
@@ -29,14 +28,17 @@ class Cliente(Exception):
             # for disparada, deve-se verificar se há mensagens do servidor para serem lidas e tratadas 
             # (exemplo: verificar a chegada de ping)
             signal.alarm(20)
+            start = time()
             try:
                 cmd = input()
             except Exception as e:
+                end = time()
                 # Nada foi digitado em 30 segundos, o que fazer? 
                 # (Exemplo: verificar se há mensagens oriundas do servidor)
-                print()
+                print("batata", end - start)
                 continue
             signal.alarm(0)
+            print("salada")
 
             # Um comando foi digitado. Tratar!
             # ...

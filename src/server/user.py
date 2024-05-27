@@ -1,5 +1,4 @@
-from errors import InvalidNicknameError
-
+from server.errors import InvalidNicknameError
 from utils.logger import Logger
 
 

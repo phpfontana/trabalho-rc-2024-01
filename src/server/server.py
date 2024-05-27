@@ -1,9 +1,7 @@
-#!/usr/bin/python
-
 import socket
 from _thread import start_new_thread
 from collections import deque
-from connection import ClientConnection
+from server.connection import ClientConnection
 
 
 class Server:
@@ -33,10 +31,3 @@ class Server:
         self.listen()
 
 
-def main():
-    s = Server(port=6667)
-    s.start()
-
-
-if __name__ == "__main__":
-    main()
