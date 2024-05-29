@@ -5,9 +5,9 @@ import signal
 import socket
 from time import time
 
-class Cliente(Exception):
+class Cliente():
     def __init__(self):
-        self.conectado = False
+        self.conected = False
 
         # Exceção para alarme de tempo (não alterar esta linha)
         signal.signal(signal.SIGALRM, self.exception_handler)

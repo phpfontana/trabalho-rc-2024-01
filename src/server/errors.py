@@ -3,7 +3,7 @@ class InvalidNicknameError(Exception):
         self.error_code = 432
         self.nickname = nickname
         self.message = f"{self.error_code} * {self.nickname} :Erroneous Nickname"
-        super.__init__(self.message)
+        super().__init__(self.message)
 
 
 class NicknameAlreadyInUseError(Exception):

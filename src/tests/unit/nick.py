@@ -1,5 +1,6 @@
 import unittest
 from server.user import User
+from server.errors import InvalidNicknameError
 
 
 class TestCommandNick(unittest.TestCase):
@@ -8,12 +9,21 @@ class TestCommandNick(unittest.TestCase):
         self.user = User()
 
     def test_invalid_nickname(self):
-        invalid_nick_by_initial_char = "_George"
-        self.user.handle_command_nick(invalid_nick_by_initial_char)
-        invalid_nick_by_not_allowed_char = "Ringo@"
-        self.user.handle_command_nick(invalid_nick_by_not_allowed_char)
-        invalid_nick_by_size = "Syd Barrett"
-        self.user.handle_command_nick(invalid_nick_by_size)
+        try:
+            invalid_nick_by_initial_char = "_George"
+            self.user.handle_command_nick(invalid_nick_by_initial_char)
+        except InvalidNicknameError:
+            pass
+        try:
+            invalid_nick_by_not_allowed_char = "Ringo@"
+            self.user.handle_command_nick(invalid_nick_by_not_allowed_char)
+        except InvalidNicknameError:
+            pass
+        try:
+            invalid_nick_by_size = "Syd Barrett"
+            self.user.handle_command_nick(invalid_nick_by_size)
+        except InvalidNicknameError:
+            pass
 
         self.assertIsNone(self.user.nickname)
 
