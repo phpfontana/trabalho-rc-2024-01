@@ -33,7 +33,7 @@ class User:
             nickname_str:str = nickname.decode()
         except UnicodeError as _:
             return False
-        starts_with_letter = nickname_str.isalpha()
+        starts_with_letter = nickname_str[0].isalpha()
         on_size_limit = len(nickname_str) <= self.configuration.nickname_max_size
         only_alphanum_or_underline = self.__is_only_alphanum_or_underline(nickname_str[1:])
 
@@ -42,14 +42,16 @@ class User:
         else:
             return False
 
-    def __is_registered(self) -> bool:
-        registered = (self.nickname is not None) and (self.username is not None)
-        return registered
+    def is_first_nick(self) -> bool:
+        return (len(self.history.nickname) == 1)
+
+    def is_registered(self) -> bool:
+        return bool(self.nickname) and bool(self.username)
 
     def __is_only_alphanum_or_underline(
         self, nickname_without_first_letter: str
     ) -> bool:
         for char in nickname_without_first_letter:
-            if not (char.isalnum()) or (char != "_"):
+            if not (char.isalnum() or char == "_"):
                 return False
         return True

@@ -1,6 +1,8 @@
+from socket import socket
 from typing import List
+
 from server.channel import Channel
-from server.connection import ClientConnection
+from server.connection import Connection
 from server.errors import Errors
 from server.message_formatter import MessageFormatter
 from server.message_to_send import MessageToSend
@@ -11,39 +13,37 @@ class CommandHandler:
     def __init__(self, server):
         self.__server = server
 
-    def nick(
-        self, nickname: bytearray, connection: ClientConnection
-    ) -> List[MessageToSend]:
+    def nick(self, nickname: bytearray, connection: Connection) -> List[MessageToSend]:
         user = connection.user
         if user.is_valid_nickname(nickname):
             if self.__server.is_nickname_free(nickname):
                 messages_to_send = None
-                if user.nickname is not None:
-                    user.set_nickname(nickname)
+                user.set_nickname(nickname)
+                if not user.is_first_nick():
                     message_payload = MessageFormatter.Nick.NICKCHANGE(user)
                     messages_to_send = [
                         MessageToSend(connection.socket, message_payload)
                     ]
-                return messages_to_send
+                    return messages_to_send
+                elif user.is_registered():
+                    return self.__generate_messages_for_registration(
+                        connection.socket, nickname, connection.host, self.__server.motd
+                    )
             else:
-                raise Errors.Nick.NicknameAlreadyInUseError(nickname)
+                raise Errors.Nickname.NicknameAlreadyInUseError(nickname)
         else:
-            raise Errors.Nick.InvalidNicknameError(nickname)
+            raise Errors.Nickname.InvalidNicknameError(nickname)
 
-    def user(
-        self, username: bytearray, connection: ClientConnection
-    ) -> List[MessageToSend]:  # TODO Implement better registration
+    def user(self, username: bytearray, connection: Connection) -> List[MessageToSend]:
         user = connection.user
-        if (user.username is None) and (user.nickname is not None):
-            user.username = username
-            message_payload = MessageFormatter.Registration.RPL_WELCOME(user)
-            messages_to_send = [MessageToSend(connection.socket, message_payload)]
-            return messages_to_send
-        else:
-            raise "registration problem"
+        user.username = username
+        if user.is_registered():
+            return self.__generate_messages_for_registration(
+                connection.socket, user.nickname, connection.host, self.__server.motd
+            )
 
     def ping(
-        self, connection: ClientConnection, ping_payload_with_colon: bytearray
+        self, connection: Connection, ping_payload_with_colon: bytearray
     ) -> List[MessageToSend]:
         if ping_payload_with_colon[0] == ":" and len(ping_payload_with_colon) > 1:
             ping_payload = ping_payload_with_colon[1:]
@@ -53,7 +53,7 @@ class CommandHandler:
         else:
             raise "ping bad formated"
 
-    def join(self, channel_name: bytearray, connection: ClientConnection):
+    def join(self, channel_name: bytearray, connection: Connection):
         user = connection.user
         if Channel.is_valid_channel_name(channel_name):
             channel = self.__server.find_channel_by_name(channel_name)
@@ -71,6 +71,21 @@ class CommandHandler:
                 return messages_to_send
         else:
             raise Errors.Join.InvalidChannelNameError(channel_name)
+
+    def __generate_messages_for_registration(
+        self, socket: socket, nickname: bytearray, host: bytearray, motd: bytearray
+    ) -> List[MessageToSend]:
+        welcome_msg = MessageToSend(
+            socket, MessageFormatter.Registration.RPL_WELCOME(nickname)
+        )
+        motd_start_msg = MessageToSend(
+            socket, MessageFormatter.Motd.RPL_MOTDSTART(nickname, host)
+        )
+        motd_msg = MessageToSend(socket, MessageFormatter.Motd.RPL_MOTD(nickname, motd))
+        motd_end_msg = MessageToSend(
+            socket, MessageFormatter.Motd.RPL_ENDOFMOTD(nickname)
+        )
+        return [welcome_msg, motd_start_msg, motd_msg, motd_end_msg]
 
     def __generate_messages_for_channel_join(
         self, user: User, host: bytearray, channel: Channel

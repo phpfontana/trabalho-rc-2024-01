@@ -5,16 +5,17 @@ from typing import List
 
 from server.channel import Channel
 from server.command_handler import CommandHandler
-from server.connection import ClientConnection
 from server.errors import Errors
 from server.processed_message import ProcessedMessage
 from shared.logger import Logger
+from server.connection import Connection
+from server.message_to_send import MessageToSend
 
 
 class Server:
     def __init__(
         self,
-        motd="Welcome to the Internet Relay Network",
+        motd=bytearray(b"Here we love overengeneering and unnecessary complexity leading to bad code!"),
         port=6667,
         debug_mode=False,
     ):
@@ -26,37 +27,41 @@ class Server:
         self.debug_mode = debug_mode
         self.logger = Logger(".server.log", debug_mode)
 
-    def client_thread_loop(self, connection_socket):
-        try:
-            connection = ClientConnection(connection_socket)
-            self.connections_list.append(connection)
+    def client_thread_loop(self, connection_socket:socket.socket):
+        connection:Connection = Connection(connection_socket)
+        self.connections_list.append(connection)
+        while(True):
             message: ProcessedMessage = connection.wait_for_message()
-            messages_to_send: List[self.MessageToSend] = self.message_handler(
+            print(message.message, "manjericao",connection.buffer, "salada")
+            messages_to_send: List[MessageToSend] = self.message_handler(
                 connection, message
             )
-            for message in messages_to_send:
-                message.send()
-        except Exception as e:
-            print(e)
+            if messages_to_send:
+                print("tem message to send")
+                for msg in messages_to_send:
+                    print(msg.payload)
+                    msg.send()
+
 
     def listen(self):
         _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         _socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         _socket.bind(("", self.port))
         _socket.listen(4096)
-
+        print(f"Servidor aceitando conexões na porta {self.port}...")
         while True:
-            print(f"Servidor aceitando conexões na porta {self.port}...")
             connection_socket, addr = _socket.accept()
+            print("Conexão recebida")
             start_new_thread(self.client_thread_loop, (connection_socket,))
 
-    def message_handler(self, connection: ClientConnection, message: ProcessedMessage):
+    def message_handler(self, connection: Connection, message: ProcessedMessage):
         command = message.command
         params = message.params
         match command:
             case b"NICK":
                 try:
-                    messages_to_send = self.command_handler.nick(*params, connection)
+                    nickname = params[0]
+                    messages_to_send = self.command_handler.nick(nickname, connection)
                     return messages_to_send
                 except Errors.Nickname.InvalidNicknameError as e:
                     return e.message
@@ -64,7 +69,8 @@ class Server:
                     return e.message
             case b"USER":
                 try:
-                    message_to_send = self.command_handler.user(*params, connection)
+                    username = params[0]
+                    message_to_send = self.command_handler.user(username, connection)
                     return message_to_send
                 except Errors.Nickname.InvalidNicknameError as e:
                     return e.message
@@ -91,9 +97,9 @@ class Server:
             case _:
                 self.logger.warning(f"Unknown command received: {command}")
 
-    def is_nickname_free(self, nickname: str) -> bool:
+    def is_nickname_free(self, nickname: bytearray) -> bool:
         for connection in self.connections_list:
-            if connection.user.get_nickname() == nickname:
+            if connection.user.nickname == nickname:
                 return False
         return True
 
@@ -107,7 +113,6 @@ class Server:
             if channel.name == channel_name:
                 return channel
         return None
-
 
     def start(self):
         self.listen()

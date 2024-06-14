@@ -1,23 +1,24 @@
-from shared.logger import Logger
+from socket import socket
+from typing import List
+
 from server.errors import Errors
 from server.processed_message import ProcessedMessage
 from server.user import User
-from typing import List
-from socket import socket
+from shared.logger import Logger
 
 
-class ClientConnection:
+class Connection:
     class ConnectionConfig:
         def __init__(self, debug_mode=False):
             self.debugmode = debug_mode
 
-    def __init__(self, connection_socket: socket, debug_mode=False):
-        self.socket = connection_socket
-        self.host = connection_socket.getsockname()[0].encode()
+    def __init__(self, socket: socket, debug_mode:bool=False):
+        self.socket = socket
+        self.host = socket.getsockname()[0].encode()
         self.buffer = bytearray()
-        self.message_history:List[ProcessedMessage] = []
+        self.message_history: List[ProcessedMessage] = []
         self.configuration = self.ConnectionConfig(debug_mode)
-        self.user = User(debug_mode=debug_mode)
+        self.user = User(socket, debug_mode=debug_mode)
         self.logger = Logger(".server.log", debug_mode)
 
     def send_data(self, data: bytes):
@@ -29,17 +30,16 @@ class ClientConnection:
 
     def wait_for_message(self) -> ProcessedMessage:
         try:
-            data_chunk = self.socket.recv(512)
-            if data_chunk == b"":
-                raise "connecton closed"
-            self.buffer.extend(data_chunk)
+            if not self.buffer:
+                data_chunk = self.socket.recv(512)
+                if data_chunk == b"":
+                    raise "connecton closed"
+                self.buffer.extend(data_chunk)
             processed_message = ProcessedMessage(self.buffer)
+            self.buffer = processed_message.remaining_buffer
             self.message_history.append(processed_message)
             return processed_message
         except Errors.NoEndMessageCharsFoundError:
-            return True
-        except Exception as e:
-            self.logger.error(f"Error while receiving data: {e}")
             return False
 
     def parse_received_data(self):
