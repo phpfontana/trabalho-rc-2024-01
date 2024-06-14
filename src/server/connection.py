@@ -1,11 +1,7 @@
-from typing import Any
-
-from utils.logger import Logger
-
-from server.errors import InvalidNicknameError
-from server.errors import NoEndMessageCharsFoundError
+from shared.logger import Logger
+from server.errors import Errors
 from server.processed_message import ProcessedMessage
-from shared.user import User
+from server.user import User
 from typing import List
 from socket import socket
 
@@ -40,7 +36,7 @@ class ClientConnection:
             processed_message = ProcessedMessage(self.buffer)
             self.message_history.append(processed_message)
             return processed_message
-        except NoEndMessageCharsFoundError:
+        except Errors.NoEndMessageCharsFoundError:
             return True
         except Exception as e:
             self.logger.error(f"Error while receiving data: {e}")

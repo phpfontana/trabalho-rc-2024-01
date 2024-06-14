@@ -1,9 +1,7 @@
-from server.connection import ClientConnection
-
 class ProcessedMessage():
     def __init__(self, buffer:bytearray):
         self.data_buffer = buffer
-        self.message = self.__separate_message(buffer)
+        self.message = self.__separate_message()
         self.command, self.params = self.__parse_message()
 
     def __separate_message(self):

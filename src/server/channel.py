@@ -1,5 +1,5 @@
 from typing import List
-from shared.user import User
+from server.user import User
 from shared.utils import to_lowercase_bytes
 
 

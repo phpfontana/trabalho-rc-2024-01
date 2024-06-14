@@ -1,23 +1,14 @@
 from typing import List
-
-from utils.logger import Logger
-
 from server.channel import Channel
 from server.connection import ClientConnection
-from server.errors import (
-    Errors,
-    InvalidChannelNameError,
-    InvalidNicknameError,
-    NicknameAlreadyInUseError,
-)
+from server.errors import Errors
 from server.message_formatter import MessageFormatter
-from server.server import MessageToSend, Server
-from shared.user import User
-from shared.utils import is_only_alphanum_or_underline, is_valid_nickname
+from server.message_to_send import MessageToSend
+from server.user import User
 
 
 class CommandHandler:
-    def __init__(self, server: Server):
+    def __init__(self, server):
         self.__server = server
 
     def nick(
@@ -35,9 +26,9 @@ class CommandHandler:
                     ]
                 return messages_to_send
             else:
-                raise NicknameAlreadyInUseError(nickname)
+                raise Errors.Nick.NicknameAlreadyInUseError(nickname)
         else:
-            raise InvalidNicknameError(nickname)
+            raise Errors.Nick.InvalidNicknameError(nickname)
 
     def user(
         self, username: bytearray, connection: ClientConnection
@@ -77,6 +68,7 @@ class CommandHandler:
                 messages_to_send = self.__generate_messages_for_channel_join(
                     user, connection.host, channel
                 )
+                return messages_to_send
         else:
             raise Errors.Join.InvalidChannelNameError(channel_name)
 

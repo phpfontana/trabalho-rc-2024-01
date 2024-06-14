@@ -10,3 +10,11 @@ def is_utf8_compatible(byte_array:bytearray) -> bool:
         return True
     except UnicodeError as _:
         return False
+
+def format_byte_message(*args):
+    byte_space = b" "
+    message = b""
+    for arg in args:
+        message = message + arg + byte_space
+    return message[:-1] + b"\r\n"
+

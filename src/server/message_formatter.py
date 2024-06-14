@@ -1,6 +1,5 @@
 from typing import List
-
-from server.channel import Channel
+from shared.utils import format_byte_message
 from server.user import User
 from shared.irc_codes import IrcCodes
 
@@ -43,7 +42,7 @@ class MessageFormatter:
             channel_name: bytearray,
             nickname_list: List[bytearray],
         ):
-            return MessageFormatter.generate_message(
+            return format_byte_message(
                 b":" + host,
                 IrcCodes.Names.RPL_NAMREPLY,
                 nickname,
@@ -58,7 +57,7 @@ class MessageFormatter:
             host: bytearray,
             channel_name: bytearray,
         ):
-            return MessageFormatter.generate_message(
+            return format_byte_message(
                 b":" + host,
                 IrcCodes.Names.RPL_ENDOFNAMES,
                 nickname,
@@ -68,13 +67,7 @@ class MessageFormatter:
 
     class Join:
         def JOIN_CHANNEL(self, nickname: bytearray, channel_name: bytearray):
-            return MessageFormatter.generate_message(
+            return format_byte_message(
                 b":" + nickname, b"JOIN", b":" + channel_name
             )
 
-    def generate_message(*args):
-        byte_space = b" "
-        message = b""
-        for arg in args:
-            message = message + arg + byte_space
-        return message[:-1] + b"\r\n"
