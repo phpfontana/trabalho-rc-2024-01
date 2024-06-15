@@ -1,26 +1,28 @@
 import logging
+import sys
 
 
 class Logger:
     def __init__(
         self,
-        filename=".app.log",
-        debug_mode=False,
-        level=logging.DEBUG,
+        filename=None,
+        enabled=True,
+        level=logging.INFO,
     ):
         self.logger = logging.getLogger(__name__)
-        if debug_mode:
+        if enabled:
             self.logger.setLevel(level)
 
             formatter = logging.Formatter(
-                "%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s"
+                    "%(asctime)s - %(filename)s:%(funcName)s:%(lineno)d - %(message)s"
             )
 
-            file_handler = logging.FileHandler(filename)
-            file_handler.setFormatter(formatter)
-            self.logger.addHandler(file_handler)
+            if self.filename:
+                file_handler = logging.FileHandler(filename)
+                file_handler.setFormatter(formatter)
+                self.logger.addHandler(file_handler)
 
-            stream_handler = logging.StreamHandler()
+            stream_handler = logging.StreamHandler(sys.stdout)
             stream_handler.setFormatter(formatter)
             self.logger.addHandler(stream_handler)
         else:

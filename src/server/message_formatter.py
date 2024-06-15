@@ -8,7 +8,7 @@ from shared.utils import format_byte_message
 class MessageFormatter:
     class Registration:
         @staticmethod
-        def RPL_WELCOME(nickname:bytearray):
+        def RPL_WELCOME(nickname: bytearray):
             return format_byte_message(
                 IrcCodes.Registration.RPL_WELCOME,
                 nickname,
@@ -52,17 +52,21 @@ class MessageFormatter:
                 b":End of /MOTD command.",
             )
 
-    class User:
-        pass
+    class Privmsg:
+        @staticmethod
+        def PRIVMSG(nickname: bytearray, channel_name: bytearray, msg: bytearray):
+            return format_byte_message(
+                b":" + nickname, b"PRIVMSG", channel_name, b":" + msg
+            )
 
     class PingPong:
         @staticmethod
         def PING(payload):
-            return f"PING :{payload}".encode()
+            return b"PING " + payload
 
         @staticmethod
         def PONG(payload):
-            return f"PONG :{payload}".encode()
+            return b"PONG " + payload
 
     class Names:
         @staticmethod
@@ -99,3 +103,22 @@ class MessageFormatter:
         @staticmethod
         def JOIN_CHANNEL(nickname: bytearray, channel_name: bytearray):
             return format_byte_message(b":" + nickname, b"JOIN", b":" + channel_name)
+
+    class Part:
+        @staticmethod
+        def PART_CHANNEL(
+            nickname: bytearray,
+            channel_name: bytearray,
+            reason: bytearray = bytearray(),
+        ):
+            return format_byte_message(
+                b":" + nickname, b"PART" + channel_name + b":" + reason
+            )
+
+    class Quit:
+        @staticmethod
+        def QUIT_SERVER(
+            nickname: bytearray,
+            reason: bytearray = bytearray(),
+        ):
+            return format_byte_message(b":" + nickname, b"QUIT" + b":" + reason)

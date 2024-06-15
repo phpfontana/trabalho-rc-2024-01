@@ -4,22 +4,17 @@ from typing import List
 from server.errors import Errors
 from server.processed_message import ProcessedMessage
 from server.user import User
-from shared.logger import Logger
 
 
 class Connection:
-    class ConnectionConfig:
-        def __init__(self, debug_mode=False):
-            self.debugmode = debug_mode
 
-    def __init__(self, socket: socket, debug_mode:bool=False):
+    def __init__(self, socket: socket, server):
         self.socket = socket
+        self.logger = server.logger
         self.host = socket.getsockname()[0].encode()
         self.buffer = bytearray()
         self.message_history: List[ProcessedMessage] = []
-        self.configuration = self.ConnectionConfig(debug_mode)
-        self.user = User(socket, debug_mode=debug_mode)
-        self.logger = Logger(".server.log", debug_mode)
+        self.user = User(socket)
 
     def send_data(self, data: bytes):
         try:
@@ -32,6 +27,7 @@ class Connection:
         try:
             if not self.buffer:
                 data_chunk = self.socket.recv(512)
+                self.logger.info(b"Received message: " + data_chunk)
                 if data_chunk == b"":
                     raise "connecton closed"
                 self.buffer.extend(data_chunk)

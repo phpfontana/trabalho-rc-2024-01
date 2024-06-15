@@ -15,6 +15,10 @@ def format_byte_message(*args):
     byte_space = b" "
     message = b""
     for arg in args:
-        message = message + arg + byte_space
+        if isinstance(arg,list):
+            for item in arg:
+                message = message + item + byte_space
+        else:
+            message = message + arg + byte_space
     return message[:-1] + b"\r\n"
 
