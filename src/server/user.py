@@ -1,6 +1,7 @@
 from socket import socket
 
 from shared.utils import to_lowercase_bytes
+from typing import List
 
 
 class User:
@@ -18,9 +19,15 @@ class User:
         self.username = bytearray()
         self.normalized_username = bytearray()
         self.registered = False
+        self.channels: List = []
         self.connection_socket = connection_socket
         self.configuration = self.UserConfig(nickname_max_size)
         self.history = self.UserHistory()
+
+
+    def quit_all_channels(self):
+        for channel in self.channels:
+            channel.user_list.remove(self)
 
     def set_nickname(self, nickname: bytearray):
         if self.nickname is not None:

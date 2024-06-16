@@ -3,9 +3,16 @@ from shared.utils import format_byte_message
 
 
 class Errors:
+    class Connection:
+        class ConnectionClosedByPeer(Exception):
+            def __init__(self, connection):
+                self.connection = connection
+                nickname = connection.user.nickname.decode()
+                self.log_msg = f"Connection closed without quit command, user: {nickname}, addr: {connection.addr} "
+        
     class Registration:
         class UserNotRegisteredError(Exception):
-            def __init(self):
+            def __init__(self):
                 pass
 
     class Nickname:
@@ -22,10 +29,7 @@ class Errors:
             def __init__(self, nickname):
                 self.error_code = IrcCodes.Nick.ERR_ERRONEUSNICKNAME
                 self.nickname = nickname
-                self.message = (
-                    f"{self.error_code} * {self.nickname} :Nickname is already in"
-                    " use\r\n"
-                ).encode()
+                self.message = format_byte_message(self.error_code, b"*", self.nickname, b"Nickname is already in use\r\n")
                 super().__init__(self.message)
 
     class Username:
@@ -56,6 +60,7 @@ class Errors:
                 self.error_code = IrcCodes.Part.ERR_NOTONCHANNEL
                 self.nickname = nickname
                 self.host = host
+                print("cu")
                 self.channel_name = channel_name
                 self.message = format_byte_message(
                     b":" + host,
@@ -66,8 +71,6 @@ class Errors:
                 )
                 super().__init__(self.message)
         
-        
-
     class NoEndMessageCharsFoundError(Exception):
         def __init__(self):
             pass

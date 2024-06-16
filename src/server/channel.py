@@ -33,7 +33,6 @@ class Channel:
             return False
         if channel_name_str[0] == "#":
             if len(channel_name_str) <= self.options.max_channel_name:
-                print("DAWDADAIABH")
                 if self.__is_only_alphanum_or_underline(channel_name_str[1:]):
                     return True
         return False

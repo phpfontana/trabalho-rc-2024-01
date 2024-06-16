@@ -1,4 +1,3 @@
-from mypyc.test-data.fixtures.ir import bytearray
 from socket import socket
 from typing import List
 
@@ -47,16 +46,13 @@ class CommandHandler:
                     self.__server.motd,
                 )
         else:
-            self.__server.logger.warning("change realname attempt")
+            self.__server.logger.log.warning("change realname attempt")
             raise "change realname attempt"
 
     def ping(self, payload: bytearray, connection: Connection) -> List[MessageToSend]:
-        if payload:
-            message_payload = MessageFormatter.PingPong.PONG(payload)
-            messages_to_send = [MessageToSend(connection.socket, message_payload)]
-            return messages_to_send
-        else:
-            raise "ping without payload"
+        message_payload = MessageFormatter.PingPong.PONG(payload)
+        messages_to_send = [MessageToSend(connection.socket, message_payload)]
+        return messages_to_send
 
     def join(self, channel_name: bytearray, connection: Connection):
         user = connection.user
@@ -64,6 +60,7 @@ class CommandHandler:
         if new_channel.is_valid_channel_name(channel_name):
             channel = self.__server.find_channel_by_name(new_channel.normalized_name)
             if channel:
+                user.channels.append(channel)
                 channel.user_list.append(user)
                 messages_to_send = self.__generate_messages_for_channel_join(
                     user, connection.host, channel
@@ -71,12 +68,16 @@ class CommandHandler:
                 return messages_to_send
             else:
                 self.__server.channels.append(new_channel)
+                user.channels.append(new_channel)
+                new_channel.user_list.append(user)
                 messages_to_send = self.__generate_messages_for_channel_join(
                     user, connection.host, new_channel
                 )
                 return messages_to_send
         else:
-            raise Errors.Join.InvalidChannelNameError(connection.host, channel_name)
+            raise Errors.Join.InvalidChannelNameError(
+                user.nickname, connection.host, channel_name
+            )
 
     def privmsg(
         self, channel_name: bytearray, user_msg: bytearray, connection: Connection
@@ -84,10 +85,17 @@ class CommandHandler:
         nickname: bytearray = connection.user.nickname
         channel = self.__server.find_channel_by_name(channel_name)
         if channel:
+            self.__server.logger.log.debug(f"Channel found: {channel}")
+            self.__server.logger.log.debug(f"privmsg: {user_msg}")
             privmsg = MessageFormatter.Privmsg.PRIVMSG(nickname, channel_name, user_msg)
+            self.__server.logger.log.debug(f"privmsg: {privmsg}")
             messages_to_send = []
+            self.__server.logger.log.debug(f"Channel_list: {channel.user_list}")
             for user in channel.user_list:
-                messages_to_send.append(MessageToSend(user.connection_socket, privmsg))
+                if user != connection.user:
+                    messages_to_send.append(
+                        MessageToSend(user.connection_socket, privmsg)
+                    )
             return messages_to_send
         else:
             raise Errors.Join.InvalidChannelNameError(connection.host, channel_name)
@@ -96,14 +104,18 @@ class CommandHandler:
         self, channel_name: bytearray, connection, reason: bytearray = bytearray()
     ):
         user = connection.user
-        channel = self.__server.find_channel_by_name
+        channel = self.__server.find_channel_by_name(channel_name)
         if channel:
+            self.__server.logger.log.debug(f"Channel found: {channel.name}")
             partmsg = MessageFormatter.Part.PART_CHANNEL(
                 user.nickname, channel_name, reason
             )
             messages_to_send = []
             for user in channel.user_list:
                 messages_to_send.append(MessageToSend(user.connection_socket, partmsg))
+            self.__server.logger.log.debug(f"Channel list before remove: {channel.user_list}")
+            channel.user_list.remove(user)
+            self.__server.logger.log.debug(f"Channel list after remove: {channel.user_list}")
             return messages_to_send
         else:
             raise Errors.Part.NotOnChannelError(
@@ -116,7 +128,7 @@ class CommandHandler:
         socket = connection.socket
         if channel:
             host = connection.host
-            nickname_list = channel.get_nick_name_list()
+            nickname_list = channel.get_nickname_list()
             msg_list = MessageFormatter.Names.RPL_NAMREPLY(
                 user.nickname, host, channel.name, nickname_list
             )
@@ -128,10 +140,11 @@ class CommandHandler:
                 MessageToSend(socket, msg_list_end),
             ]
         else:
-            raise Errors.Join.InvalidChannelNameError(connection.host, channel_name)
+            raise Errors.Join.InvalidChannelNameError(user.nickname,connection.host, channel_name)
 
-    def quit(self, reason: bytearray=bytearray(), connection):
+    def quit(self, connection, reason: bytearray = bytearray()):
         user = connection.user
+        self.__server.disconnect_user(user, connection)
         msg_quit = MessageFormatter.Quit.QUIT_SERVER(user.nickname, reason)
         messages_to_send = []
         for connection in self.__server.connections:
@@ -183,5 +196,3 @@ class CommandHandler:
         messages_to_send.append(MessageToSend(user.connection_socket, message_list))
         messages_to_send.append(MessageToSend(user.connection_socket, message_list_end))
         return messages_to_send
-
-    # def __generate_messages_to_send_list_for_channel_msg(self, nickname:bytearray, channel_name:bytearray, msg:bytearray):

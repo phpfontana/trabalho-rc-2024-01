@@ -56,17 +56,17 @@ class MessageFormatter:
         @staticmethod
         def PRIVMSG(nickname: bytearray, channel_name: bytearray, msg: bytearray):
             return format_byte_message(
-                b":" + nickname, b"PRIVMSG", channel_name, b":" + msg
+                b":" + nickname, b"PRIVMSG", channel_name, msg
             )
 
     class PingPong:
         @staticmethod
         def PING(payload):
-            return b"PING " + payload
+            return format_byte_message(b"PING", payload)
 
         @staticmethod
         def PONG(payload):
-            return b"PONG " + payload
+            return format_byte_message(b"PONG", payload)
 
     class Names:
         @staticmethod
@@ -76,6 +76,7 @@ class MessageFormatter:
             channel_name: bytearray,
             nickname_list: List[bytearray],
         ):
+            nickname_list[0] = b":" + nickname_list[0]
             return format_byte_message(
                 b":" + host,
                 IrcCodes.Names.RPL_NAMREPLY,
@@ -112,7 +113,7 @@ class MessageFormatter:
             reason: bytearray = bytearray(),
         ):
             return format_byte_message(
-                b":" + nickname, b"PART" + channel_name + b":" + reason
+                b":" + nickname, b"PART", channel_name , reason
             )
 
     class Quit:
