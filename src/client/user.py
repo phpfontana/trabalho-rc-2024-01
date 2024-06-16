@@ -30,14 +30,13 @@ class User:
             channel.users.remove(self)
 
     def set_nickname(self, nickname: str): #TODO Think about when nickname is None
-        if self.nickname is not None:
-            if self.__is_valid_nickname(nickname):
-                self.history.nickname.append(self.nickname)
-                self.nickname = nickname
-                self.username = nickname 
-                self.normalized_nickname = nickname.lower()
-            else:
-                raise InvalidNicknameError(nickname)
+        if self.__is_valid_nickname(nickname):
+            self.history.nickname.append(self.nickname)
+            self.nickname = nickname
+            self.username = nickname 
+            self.normalized_nickname = nickname.lower()
+        else:
+            raise InvalidNicknameError(nickname)
 
     def __is_valid_nickname(self, nickname: str) -> bool:
         starts_with_letter = nickname[0].isalpha()

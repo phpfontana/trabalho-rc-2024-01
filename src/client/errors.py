@@ -4,7 +4,6 @@ class InvalidNicknameError(Exception):
         self.msg = f"Choose another nickname {nickname} is invalid"
         super().__init__(self.msg)
 
-
 class InvalidChannelNameError(Exception):
     def __init__(self, channel_name):
         self.channel_name = channel_name 
@@ -28,3 +27,9 @@ class CommandShouldStartWithBackslashError(Exception):
         self.msg = f"Every command should start with backslash '\\' char!\n Your command: {user_input}"
         super().__init__(self.msg)
 
+class Errors:
+    class Connection:
+        class ConnectionClosedByPeer(Exception):
+            def __init__(self, client):
+                self.client = client 
+                self.log_msg = "Connection closed by server"

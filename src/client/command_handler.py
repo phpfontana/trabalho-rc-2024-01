@@ -117,7 +117,9 @@ class CommandHandler:
 
     def leave(self, channel_name: str, reason: str = None):
         if self.client.connected:
-            self.__send_to_server(self, channel_name, reason)
+            if not channel_name:
+                channel_name = self.user.default_channel
+            self.__send_to_server(self.__format_part_msg(channel_name, reason))
         else:
             raise CommandOnlyUsableConnectedError("/disconnect")
 

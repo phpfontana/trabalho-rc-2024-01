@@ -56,7 +56,6 @@ class InputHandler:
                             channel_name = params[0]
                         except IndexError:
                             print("Missing channel_name param!")
-                            return
                         try:
                             reason = params[1]
                             self.command_handler.leave(channel_name, params)
