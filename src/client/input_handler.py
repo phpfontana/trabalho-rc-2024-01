@@ -1,6 +1,7 @@
 from client.client import Client
 from client.command_handler import CommandHandler
 from client.user import User
+from client.errors import CommandOnlyUsableConnectedError
 
 
 class InputHandler():
@@ -11,37 +12,40 @@ class InputHandler():
 
     def listen_command_input(self):
         while(True):
-            user_input = self.__safe_read_input()
-            command, params = self.__separate_command_params(user_input)
-            match command:
-                case "nick":
-                    try:
-                        nick = params[0]
-                        self.command_handler.nick(nick)
-                    except IndexError:
-                        print("Missing nick param!")
-                case "connect":
-                    pass
-                case "disconnect":
-                    pass
-                case "quit":
-                    pass
-                case "join":
-                    pass
-                case "leave":
-                    pass
-                case "part":
-                    pass
-                case "channel":
-                    pass
-                case "list":
-                    pass
-                case "msg":
-                    pass
-                case "help":
-                    pass
-                case _:
-                    pass
+            try:
+                user_input = self.__safe_read_input()
+                command, params = self.__separate_command_params(user_input)
+                match command:
+                    case "nick":
+                        try:
+                            nick = params[0]
+                            self.command_handler.nick(nick)
+                        except IndexError:
+                            print("Missing nick param!")
+                    case "connect":
+                        pass
+                    case "disconnect":
+                        pass
+                    case "quit":
+                        pass
+                    case "join":
+                        pass
+                    case "leave":
+                        pass
+                    case "part":
+                        pass
+                    case "channel":
+                        pass
+                    case "list":
+                        pass
+                    case "msg":
+                        pass
+                    case "help":
+                        pass
+                    case _:
+                        pass
+            except CommandOnlyUsableConnectedError as e:
+                print(e.msg)
     
     def __separate_command_params(self, user_input):
         if user_input[0] != '\\':
