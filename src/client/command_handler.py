@@ -1,3 +1,4 @@
+from typing import List
 from client.client import Client
 from client.user import User
 import socket
@@ -68,6 +69,18 @@ class CommandHandler():
         else:
             raise CommandOnlyUsableConnectedError("/list")
 
+    def channel(self, channel_name:str=None):
+        if not channel_name:
+            if self.user.channels:
+                print("Channels: ")
+                for channel in self.user.channels:
+                    print(channel.name, end=" ")                
+            else :
+                raise CommandOnlyUsableConnectedError("/channel")
+        else:
+            self.user.default_channel = channel_name
+            print(f"Congrats! You have set {channel_name} as your default channel!")
+
     def join(self, channel_name:str):
         pass
 
@@ -86,6 +99,10 @@ class CommandHandler():
     
     def __format_names_msg(self, channel_name:str):
         return f'NAMES {channel_name}\r\n'.encode()
+    
+    def __format_channels_list_msg(self, channels_list:List[str]):
+        return f'LIST {channels_list}\r\n'.encode()
+    
 
     def __send_to_server(self,msg):
         self.client.server_socket.sendall(msg)
