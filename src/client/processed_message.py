@@ -9,7 +9,7 @@ class ProcessedMessage:
         self.remaining_buffer = buffer
         self.logger = logger
         self.message = self.__separate_message()
-        self.command = self.find_three_digits_or_irc_command_bytes(buffer)
+        self.command_or_code = self.find_three_digits_or_irc_command_bytes(buffer)
 
 
     def find_three_digits_or_irc_command_bytes(self, message):
@@ -26,7 +26,6 @@ class ProcessedMessage:
         else:
             return None
 
-
     def __separate_message(self):
         if b"\r\n" in self.remaining_buffer:
             message, self.remaining_buffer = self.remaining_buffer.split(b"\r\n", 1)
@@ -34,48 +33,6 @@ class ProcessedMessage:
         else:
             raise "erro de não tem \r\n"
 
-    def __identify_correct_params(self, command_or_code):
-        match command_or_code:
-            case b"USER":
-                return b"COMMAND: USER"
-            case b"NICK":
-                return b"COMMAND: NICK"
-            case b"PING":
-                return b"COMMAND: PING"
-            case b"PONG":
-                return b"COMMAND: PONG"
-            case b"JOIN":
-                return b"COMMAND: JOIN"
-            case b"PART":
-                return b"COMMAND: PART"
-            case b"QUIT":
-                return b"COMMAND: QUIT"
-            case b"PRIVMSG":
-                return b"COMMAND: PRIVMSG"
-            case b"NAMES":
-                return b"COMMAND: NAMES"
-            case b"001":
-                pass
-            case b"433":
-                return b"CODE: 433"
-            case b"432":
-                return b"CODE: 432"
-            case b"375":
-                return b"CODE: 375"
-            case b"372":
-                return b"CODE: 372"
-            case b"376":
-                return b"CODE: 376"
-            case b"403":
-                return b"CODE: 403"
-            case b"353":
-                return b"CODE: 353"
-            case b"366":
-                return b"CODE: 366"
-            case b"442":
-                return b"CODE: 442"
-            case _:
-                return None
 
     def __parse_message(self) -> Tuple[str, List[bytearray]]:
         if b" " in self.message:
