@@ -4,6 +4,7 @@ import socket
 from client.errors import InvalidNicknameError
 from client.errors import SendDataToServerError
 from client.channel import Channel
+from client.errors import CommandOnlyUsableConnectedError
 
 
 class CommandHandler():
@@ -63,10 +64,12 @@ class CommandHandler():
                     channel_name = self.user.default_channel
                 else:
                     print("U DONT HAVE DEFAULT CHANNEL")
-            self.__send_to_server(self.__format_names_msg(channel_name.encode()))                
+            self.__send_to_server(self.__format_names_msg(channel_name))                
         else:
-            print("You are not connected to any server")
+            raise CommandOnlyUsableConnectedError("/list")
 
+    def join(self, channel_name:str):
+        pass
 
     def __format_nick_msg(self):
         return f'NICK :{self.user.nick}\r\n'.encode()

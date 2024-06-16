@@ -4,6 +4,11 @@ class InvalidNicknameError(Exception):
         self.msg = f"Choose another nickname {nickname} is invalid"
         super().__init__(self.msg)
 
+class CommandOnlyUsableConnectedError(Exception):
+    def __init__(self, command_name:str):
+        self.command_name = command_name
+        self.msg = f"{command_name} can only be used when connected to a server!"
+
 class SendDataToServerError(Exception):
     def __init__(self, socket_e, data:bytearray):
         self.data = data
