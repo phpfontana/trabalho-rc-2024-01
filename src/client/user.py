@@ -1,6 +1,5 @@
 from typing import List
 from client.errors import InvalidNicknameError
-from shared.utils import to_lowercase_bytes
 
 class User:
     class UserConfig:
@@ -12,8 +11,8 @@ class User:
             self.nickname = []
 
     def __init__(self, nickname_max_size=9):
-        self.nickname = bytearray()
-        self.username = bytearray()
+        self.nickname = ""
+        self.username = ""
         self.registered = False
         self.channels: List = []
         self.default_channel:Channel = None
@@ -29,6 +28,7 @@ class User:
             if self.__is_valid_nickname(nickname):
                 self.history.nickname.append(self.nickname)
                 self.nickname = nickname
+                self.username = nickname 
                 self.normalized_nickname = nickname.lower()
             else:
                 raise InvalidNicknameError(nickname)

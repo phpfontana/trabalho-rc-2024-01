@@ -31,21 +31,16 @@ class CommandHandler():
         try:
             self.user.set_nickname(nickname)
             if self.client.connected:
-                if self.user.is_registered():
-                    if self.user.is_first_nick():
-
-                        pass
-                    else:
-                        pass
-                message = self.__format_nick_msg()
-                self.client.socket.send(message)
+                if self.user.is_first_nick():
+                    self.__send_to_server(self.__format_registration_msg())
+                else:
+                    self.__send_to_server(self.__format_nick_change_msg())
             else:
-                pass #local nick change
-                
+                print("You are not connected to any server")
+                print(f"Nick changed to {self.user.nickname}!")
         except InvalidNicknameError as e:
-            print(e.m)
+            print(e.msg)
             
-
     def __format_nick_msg(self):
         return f'NICK :{self.user.nick}\r\n'
 
@@ -53,8 +48,11 @@ class CommandHandler():
         return f"USER {self.user.nick}\r\n"
 
     def __format_registration_msg(self):
-        pass
+        return self.__format_nick_msg() + self.__format_user_msg()
 
     def __format_nick_change_msg(self):
         history = self.user.history
         return f'{history.nickname[len(history) - 1]} NICK {self.user.nickname}'
+
+    def __send_to_server(self,msg):
+        self.client.server_socket.sendall(msg)
