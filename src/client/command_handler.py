@@ -8,15 +8,16 @@ class CommandHandler():
         self.client = client
         self.user = user
    
-    def handle_command_motd(self, mtod):
+    def motd(self, mtod):
         pass
 
-    def handle_nick(self, nickname:str):
+    def nick(self, nickname:str):
         try:
             self.user.set_nickname(nickname)
             if self.client.connected:
                 if self.user.is_registered():
                     if self.user.is_first_nick():
+
                         pass
                     else:
                         pass
@@ -34,6 +35,9 @@ class CommandHandler():
 
     def __format_user_msg(self):
         return f"USER {self.user.nick}\r\n"
+
+    def __format_registration_msg(self):
+        pass
 
     def __format_nick_change_msg(self):
         history = self.user.history

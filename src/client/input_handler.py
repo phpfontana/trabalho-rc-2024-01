@@ -17,7 +17,7 @@ class InputHandler():
                 case "nick":
                     try:
                         nick = params[0]
-                        self.command_handler.handle_nick(nick)
+                        self.command_handler.nick(nick)
                     except IndexError:
                         print("Missing nick param")
                 case "connect":
