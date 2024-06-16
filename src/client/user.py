@@ -1,6 +1,5 @@
 from typing import List
 from client.errors import InvalidNicknameError
-from client.channel import Channel
 
 class User:
     class UserConfig:
@@ -16,15 +15,15 @@ class User:
         self.username = ""
         self.registered = False
         self.channels: List = []
-        self.default_channel:Channel = None
+        self.default_channel = None
         self.configuration = self.UserConfig(nickname_max_size)
         self.history = self.UserHistory()
 
-    def join_channel(self, channel:Channel):
+    def join_channel(self, channel):
         if self.__is_not_in_any_channel():
             self.default_channel = channel
         self.channels.append(channel)
-        channel.users.append()
+        channel.users.append(self)
 
     def quit_all_channels(self):
         for channel in self.channels:

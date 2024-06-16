@@ -1,9 +1,11 @@
-#!/usr/bin/python
 
 import socket
 from time import time
-from src.client.user import User
+from client.user import User
 from typing import Tuple
+from shared.logger import Logger
+import logging
+from client.input_handler import InputHandler
 
 class Client():
     def __init__(self, ip=""):
@@ -12,7 +14,9 @@ class Client():
         self.port = None
         self.server_socket = None
         self.ping_socket = None
+        self.logger = Logger(level=logging.DEBUG)
         self.user = User()
+        self.input_handler = InputHandler(self, self.user, self.logger)
 
     def connect_to_server(self, server_addr:Tuple[str,int]):
         _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -23,10 +27,3 @@ class Client():
         self.connected = True
 
 
-def main():
-    c = Client()
-    c.connect_to_server()
-
-
-if __name__ == '__main__':
-    main()

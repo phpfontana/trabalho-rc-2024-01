@@ -4,20 +4,20 @@ from datetime import datetime
 from typing import List
 
 from client.channel import Channel
-from client.client import Client
 from client.errors import (
     CommandOnlyUsableConnectedError,
     InvalidChannelNameError,
     InvalidNicknameError,
     SendDataToServerError,
 )
-from client.user import User
+import logging
 
 
 class CommandHandler:
-    def __init__(self, client: Client, user: User):
+    def __init__(self, client , user, logger):
         self.client = client
         self.user = user
+        self.logger = logger
 
     def help(self):
         commands = {
@@ -36,24 +36,30 @@ class CommandHandler:
             print(f"{command}: {description}")
 
     def connect(self, addr):  # TODO Exception already connected to server
+        if not self.user.nickname:
+            print("Set a nickname before connection")
+            return
         retry = 3
         while retry:
             try:
-                self.client.connect((addr, self.port))
+                retry -= 1
+                self.client.connect_to_server((addr))
                 self.__send_to_server(self.__format_registration_msg())
+                return
             except SendDataToServerError as e:
                 print(e.msg)
             except socket.error as e:
                 print("Erro tentar se conectar ao servidor!")
                 print(e)
-                retry -= 1
                 print(f"Retry {retry}")
 
     def nick(self, nickname: str):
         try:
             self.user.set_nickname(nickname)
             if self.client.connected and self.user.is_registered():
-                self.__send_to_server(self.__format_nick_change_msg())
+                msg = self.__format_nick_msg()
+                self.logger.log_colored.in_(logging.INFO, f"NICK OUT: {msg}")
+                self.__send_to_server(msg)
             else:
                 print("You are not connected to any server!")
                 print(f"Nick setted locally to {self.user.nickname}!")
@@ -76,7 +82,7 @@ class CommandHandler:
         if self.client.connected:
             if not channel_name:
                 if self.user.default_channel:
-                    channel_name = self.user.default_channel
+                    channel_name = self.user.default_channel.name
                 else:
                     print("U DONT HAVE DEFAULT CHANNEL")
                     return
@@ -128,10 +134,10 @@ class CommandHandler:
 
     def print_msg(self, nickname: str, channel_name: str, msg: str):
         hour_minute = datetime.now().strftime("%H:%M")
-        print(f"{hour_minute} [{channel_name}] <{nickname}> {msg}")
+        print(f"{hour_minute} [{channel_name}] <{nickname}> {msg}\r\n")
 
     def __format_privmsg_msg(self, channel_name: str, msg: str):
-        return f"PRIVMSG {channel_name} :{msg}".encode()
+        return f"PRIVMSG {channel_name} :{msg}\r\n".encode()
 
     def __format_part_msg(self, channel_name, reason: str = None):
         if not reason:
@@ -140,22 +146,16 @@ class CommandHandler:
             return f"PART {channel_name} :{reason}\r\n".encode()
 
     def __format_nick_msg(self):
-        return f"NICK :{self.user.nick}\r\n".encode()
+        return f"NICK {self.user.nickname}\r\n".encode()
 
     def __format_join_msg(self, channel_name: str):
         return f"JOIN {channel_name}\r\n".encode()
 
     def __format_user_msg(self):
-        return f"USER {self.user.nick}\r\n".encode()
+        return f"USER {self.user.nickname}\r\n".encode()
 
     def __format_registration_msg(self):
         return self.__format_nick_msg() + self.__format_user_msg()
-
-    def __format_nick_change_msg(self):
-        history = self.user.history
-        return (
-            f"{history.nickname[len(history) - 1]} NICK {self.user.nickname}".encode()
-        )
 
     def __format_names_msg(self, channel_name: str):
         return f"NAMES {channel_name}\r\n".encode()

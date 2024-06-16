@@ -98,7 +98,7 @@ class CommandHandler:
                     )
             return messages_to_send
         else:
-            raise Errors.Join.InvalidChannelNameError(connection.host, channel_name)
+            raise Errors.Join.InvalidChannelNameError(nickname,connection.host, channel_name)
 
     def part(
         self, channel_name: bytearray, connection, reason: bytearray = bytearray()

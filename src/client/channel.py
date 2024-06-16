@@ -8,9 +8,9 @@ class Channel:
             self.max_channel_name = 63
 
     def __init__(self, channel_name:str):
+        self.options = self.Options()
         self.name = self.set_channel_name(channel_name)
         self.users: List[User] = []
-        self.options = self.Options()
 
     def set_channel_name(self, channel_name:str):
         if self.__is_valid_channel_name(channel_name):
@@ -30,14 +30,10 @@ class Channel:
                 return True
         return False
 
-    def __is_valid_channel_name(self, channel_name: bytearray) -> bool:
-        try:
-            channel_name_str = channel_name.decode()
-        except UnicodeError:
-            return False
-        if channel_name_str[0] == "#":
-            if len(channel_name_str) <= self.options.max_channel_name:
-                if self.__is_only_alphanum_or_underline(channel_name_str[1:]):
+    def __is_valid_channel_name(self, channel_name: str) -> bool:
+        if channel_name[0] == "#":
+            if len(channel_name) <= self.options.max_channel_name:
+                if self.__is_only_alphanum_or_underline(channel_name[1:]):
                     return True
         return False
 

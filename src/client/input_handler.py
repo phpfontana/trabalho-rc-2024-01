@@ -1,20 +1,23 @@
-from client.client import Client
 from client.command_handler import CommandHandler
 from client.errors import CommandOnlyUsableConnectedError
-from client.user import User
+import logging
 
 
 class InputHandler:
-    def __init__(self, client: Client, user: User):
+    def __init__(self, client , user, logger):
         self.client = client
         self.user = user
-        self.command_handler = CommandHandler()
+        self.logger = logger 
+        self.command_handler = CommandHandler(client, user, logger)
 
     def listen_command_input(self):
         while True:
             try:
                 user_input = self.__safe_read_input()
+                self.logger.log_colored.in_(logging.INFO, f"user_input: {user_input}")
                 command, params = self.__separate_command_params(user_input)
+                self.logger.log.debug(f"command: {command}")
+                self.logger.log.debug(f"params: {params}")
                 match command:
                     case "nick":
                         try:
@@ -25,9 +28,10 @@ class InputHandler:
                     case "connect":
                         try:
                             ip = params[0]
-                            self.command_handler.connect(ip)
+                            port = int(params[1])
+                            self.command_handler.connect((ip, port))
                         except IndexError:
-                            print("Missing ip param!")
+                            print("Missing ip or port param!")
                     case "disconnect":
                         try:
                             reason = params[0]
@@ -93,11 +97,18 @@ class InputHandler:
                 print(e.msg)
 
     def __separate_command_params(self, user_input):
-        if user_input[0] != "\\":
-            return self.__ignore_or_generate_msg_to_default_channel()
+        if user_input[0] != "/":
+            return self.__ignore_or_generate_msg_to_default_channel(user_input)
         input_without_backslash = user_input[1:]
-        command, params = input_without_backslash.split(" ", 1)
-        return (command, params)
+        if " " in input_without_backslash:
+            command, params = input_without_backslash.split(" ", 1)
+            if " " in params:
+                params = params.split(" ",1)
+            else:
+                params = [params]
+            return (command, params)
+        else:
+            return (input_without_backslash, [])
 
     def __ignore_or_generate_msg_to_default_channel(self, user_input):
         if self.user.default_channel:

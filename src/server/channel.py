@@ -1,5 +1,4 @@
 from typing import List
-from server.user import User
 from shared.utils import to_lowercase_bytes
 
 
@@ -11,7 +10,7 @@ class Channel:
     def __init__(self, channel_name:bytearray):
         self.name = channel_name
         self.normalized_name = to_lowercase_bytes(channel_name)
-        self.user_list: List[User] = []
+        self.user_list: List = []
         self.options = self.Options()
 
     def get_nickname_list(self):
@@ -20,7 +19,7 @@ class Channel:
             nickname_list.append(user.nickname)
         return nickname_list
 
-    def is_user_in_channel(self, target_user:User) -> bool:
+    def is_user_in_channel(self, target_user) -> bool:
         for user in self.user_list:
             if target_user == user:
                 return True
