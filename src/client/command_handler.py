@@ -9,19 +9,32 @@ class CommandHandler():
         self.user = user
    
     def handle_command_motd(self, mtod):
-
+        pass
 
     def handle_nick(self, nickname:str):
-        if self.user.is_valid_nickname(nickname):
-            self.user.nickname = nickname
+        try:
+            self.user.set_nickname(nickname)
             if self.client.connected:
-                message = self.format_nick_request()
+                if self.user.is_registered():
+                    if self.user.is_first_nick():
+                        pass
+                    else:
+                        pass
+                message = self.__format_nick_msg()
                 self.client.socket.send(message)
-        else:
-            raise InvalidNicknameError(nickname)
+            else:
+                pass #local nick change
+                
+        except InvalidNicknameError as e:
+            print(e.m)
+            
 
-    def __format_user_request(self):
-        return f"USER {self.user.nick} 0 = :realname"
-
-    def __format_nick_request(self):
+    def __format_nick_msg(self):
         return f'NICK :{self.user.nick}\r\n'
+
+    def __format_user_msg(self):
+        return f"USER {self.user.nick}\r\n"
+
+    def __format_nick_change_msg(self):
+        history = self.user.history
+        return f'{history.nickname[len(history) - 1]} NICK {self.user.nickname}'

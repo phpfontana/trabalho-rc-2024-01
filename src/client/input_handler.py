@@ -1,22 +1,25 @@
-from client.errors import CommandShouldStartWithBackslashError
+from client.client import Client
 from client.command_handler import CommandHandler
 from shared.user import User
-from client.client import Client
+
 
 class InputHandler():
     def __init__(self, client:Client, user:User):
         self.client = client
         self.user = user
+        self.command_handler = CommandHandler()
 
     def listen_command_input(self):
-        command_handler = CommandHandler()
         while(True):
-            user_input = input()
+            user_input = self.__safe_read_input()
             command, params = self.__separate_command_params(user_input)
             match command:
                 case "nick":
-                    nick = params[0]
-                    command_handler.handle_nick(nick)
+                    try:
+                        nick = params[0]
+                        self.command_handler.handle_nick(nick)
+                    except IndexError:
+                        print("Missing nick param")
                 case "connect":
                     pass
                 case "disconnect":
@@ -37,11 +40,31 @@ class InputHandler():
                     pass
                 case "help":
                     pass
+                case _:
+                    pass
     
     def __separate_command_params(self, user_input):
         if user_input[0] != '\\':
-            raise CommandShouldStartWithBackslashError(user_input)
+            return self.__ignore_or_generate_msg_to_default_channel()
         input_without_backslash = user_input[1:]
         command, params = input_without_backslash.split(" ",1)
         return (command, params)
 
+
+    def __ignore_or_generate_msg_to_default_channel(self, user_input):
+       if self.user.default_channel:
+           return ("msg", [self.user.default_channel.name, user_input])
+       else:
+           return ("", [])
+
+
+    def __safe_read_input(self):
+        while True:
+            try:
+                user_input = input()
+                return user_input
+            except UnicodeError:
+                print("The input should be valid text (utf-8 encoding)")
+
+    def __check_params(self, number_of_params):
+        pass
