@@ -17,6 +17,14 @@ class ProcessedMessage:
             splited_message = message.split(" ")
             if splited_message[1] == b"NICK":
                 return b"NICK"
+            if splited_message[1] == b"PRIVMSG":
+                return b"PRIVMSG"
+            if splited_message[1] == b"QUIT":
+                return b"QUIT"
+            if splited_message[1] == b"PART":
+                return b"PART"
+            if splited_message[1] == b"JOIN":
+                return b"JOIN"
         three_digits_pattern = rb'(?<!\d)\d{3}(?!\d)'
         irc_commands_pattern = rb'\b(USER|NICK|PING|PONG|JOIN|PART|QUIT|PRIVMSG|NAMES)\b'
         combined_pattern = re.compile(rb'%s|%s' % (three_digits_pattern, irc_commands_pattern))
@@ -32,34 +40,3 @@ class ProcessedMessage:
             return message
         else:
             raise "erro de não tem \r\n"
-
-
-    def __parse_message(self) -> Tuple[str, List[bytearray]]:
-        if b" " in self.message:
-            command, params = self.message.split(b" ", 1)
-            params_list = self.__parse_params(params)
-            return (command, params_list)
-        else:
-            return (self.message, [])
-
-    def __parse_params(self, params:bytearray) -> List[bytearray]:
-        text_param: Any # bytearray/bytes LSP is crying
-        if b" :" in params:
-            other_params, text_param = params.split(b" :", 1)
-            text_param = b":" + text_param
-            other_params = other_params.strip()
-            self.logger.log.debug(other_params)
-            self.logger.log.debug(text_param)
-            if other_params:
-                if b" " in other_params:
-                    other_params_list = other_params.split(b" ")
-                    return other_params_list + [text_param]
-                else:
-                    return [other_params, text_param]
-            else:
-                return [text_param]
-        else:
-            if b" " in params:
-                return params.split(b" ")
-            else:
-                return [params]

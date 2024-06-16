@@ -36,13 +36,13 @@ class MessageReceiver():
             case b"NICK":
                 return b"COMMAND: NICK"
             case b"PING":
-                return b"COMMAND: PING"
+                self.handle_ping(message)
             case b"PONG":
                 return b"COMMAND: PONG"
             case b"JOIN":
                 return b"COMMAND: JOIN"
             case b"PART":
-                return b"COMMAND: PART"
+                self.handle_part(message)
             case b"QUIT":
                 return b"COMMAND: QUIT"
             case b"PRIVMSG":
@@ -52,15 +52,11 @@ class MessageReceiver():
             case b"001":
                 self.handle_001(message)
             case b"433":
-                return b"CODE: 433"
+                self.handle_433(message)
             case b"432":
                 return b"CODE: 432"
-            case b"375":
-                return b"CODE: 375"
-            case b"372":
-                return b"CODE: 372"
-            case b"376":
-                return b"CODE: 376"
+            case b"375" | b"372" | b"376":
+                self.handle_375_372_376(message)
             case b"403":
                 return b"CODE: 403"
             case b"353":
@@ -68,13 +64,39 @@ class MessageReceiver():
             case b"366":
                 return b"CODE: 366"
             case b"442":
-                return b"CODE: 442"
+                self.handle_442(message)
             case _:
                 return None
 
+    def handle_ping(self, message):
+        self.client.server_socket.sendall("PONG " + message.split(" ")[1])
+
+    def handle_privmsg(self, message):
+        message.split(b" ")
+
+    def handle_quit(self, message):
+        print(message.decode())
+    
+    def handle_part(self, message):
+        print(message.decode())
+
+    def handle_375_372_376(self, message):
+        print(message.split(" ",3)[3].decode())
+
+    def handle_442(self, message):
+        print(message.split(" ",3)[3].decode())
+    
+    def handle_432(self, message: bytearray):
+        nick_in_use_msg = message.split(" ")[3]
+        print(nick_in_use_msg)
+
+    def handle_433(self, message: bytearray):
+        nick_in_use_msg = message.split(" ")[3]
+        print(nick_in_use_msg)
 
     def handle_001(self, message: bytearray):
         self.client.user.registered = True
+        self.client.connected = True
         welcome_msg = message.split(b" ")[2]
         print(welcome_msg)
 
