@@ -18,6 +18,7 @@ class Client():
         _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         _socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         _socket.connect(server_addr)
+        self.server_socket = _socket
         self.host, self.port = _socket.getsockname()
         self.connected = True
 

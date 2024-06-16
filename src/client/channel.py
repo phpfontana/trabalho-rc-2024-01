@@ -1,5 +1,6 @@
 from typing import List
 from client.user import User
+from client.errors import InvalidChannelNameError
 
 class Channel:
     class Options:
@@ -7,24 +8,29 @@ class Channel:
             self.max_channel_name = 63
 
     def __init__(self, channel_name:str):
-        self.name = channel_name
-        self.normalized_name = channel_name
-        self.user_list: List[User] = []
+        self.name = self.set_channel_name(channel_name)
+        self.users: List[User] = []
         self.options = self.Options()
+
+    def set_channel_name(self, channel_name:str):
+        if self.__is_valid_channel_name(channel_name):
+            self.name = channel_name
+        else:
+            raise InvalidChannelNameError(channel_name)
 
     def get_nickname_list(self):
         nickname_list = []
-        for user in self.user_list:
+        for user in self.users:
             nickname_list.append(user.nickname)
         return nickname_list
 
     def is_user_in_channel(self, target_user:User) -> bool:
-        for user in self.user_list:
+        for user in self.users:
             if target_user == user:
                 return True
         return False
 
-    def is_valid_channel_name(self, channel_name: bytearray) -> bool:
+    def __is_valid_channel_name(self, channel_name: bytearray) -> bool:
         try:
             channel_name_str = channel_name.decode()
         except UnicodeError:

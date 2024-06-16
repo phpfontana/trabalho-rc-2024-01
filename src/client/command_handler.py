@@ -1,10 +1,12 @@
 from client.client import Client
 from client.user import User
 import socket
+from datetime import datetime
 from client.errors import InvalidNicknameError
 from client.errors import SendDataToServerError
 from client.channel import Channel
 from client.errors import CommandOnlyUsableConnectedError
+from client.errors import InvalidChannelNameError
 
 
 class CommandHandler():
@@ -68,11 +70,31 @@ class CommandHandler():
         else:
             raise CommandOnlyUsableConnectedError("/list")
 
+    def msg(self, channel_name:str, msg:str):
+        self.print_msg(channel_name, self.user, msg)
+        self.__send_to_server(self.__format_privmsg_msg(channel_name, msg))
+
+
     def join(self, channel_name:str):
-        pass
+        try:
+            new_channel = Channel(channel_name)
+            self.user.join_channel(new_channel)
+            self.__send_to_server(self.__format_join_msg(channel_name))
+        except InvalidChannelNameError as e:
+            print(e.msg)
+
+    def print_msg(self, nickname:str, channel_name:str,msg:str):
+        hour_minute = datetime.now().strftime("%H:%M")
+        print(f"{hour_minute} [{channel_name}] <{nickname}> {msg}")
+
+    def __format_privmsg_msg(self, channel_name:str, msg:str):
+        return f'PRIVMSG {channel_name} :{msg}'.encode()
 
     def __format_nick_msg(self):
         return f'NICK :{self.user.nick}\r\n'.encode()
+
+    def __format_join_msg(self, channel_name:str):
+        return f'JOIN {channel_name}\r\n'.encode()
 
     def __format_user_msg(self):
         return f"USER {self.user.nick}\r\n".encode()
@@ -82,7 +104,7 @@ class CommandHandler():
 
     def __format_nick_change_msg(self):
         history = self.user.history
-        return f'{history.nickname[len(history) - 1]} NICK {self.user.nickname}'
+        return f'{history.nickname[len(history) - 1]} NICK {self.user.nickname}'.encode()
     
     def __format_names_msg(self, channel_name:str):
         return f'NAMES {channel_name}\r\n'.encode()

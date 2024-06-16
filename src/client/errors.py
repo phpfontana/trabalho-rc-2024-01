@@ -4,6 +4,13 @@ class InvalidNicknameError(Exception):
         self.msg = f"Choose another nickname {nickname} is invalid"
         super().__init__(self.msg)
 
+
+class InvalidChannelNameError(Exception):
+    def __init__(self, channel_name):
+        self.channel_name = channel_name 
+        self.msg = f"{channel_name} is a invalid channel name!"
+        super().__init__(self.msg)
+
 class CommandOnlyUsableConnectedError(Exception):
     def __init__(self, command_name:str):
         self.command_name = command_name
