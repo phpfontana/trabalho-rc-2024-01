@@ -4,6 +4,12 @@ class InvalidNicknameError(Exception):
         self.msg = f"Choose another nickname {nickname} is invalid"
         super().__init__(self.msg)
 
+class SendDataToServerError(Exception):
+    def __init__(self, socket_e, data:bytearray):
+        self.data = data
+        self.socket_e = socket_e
+        self.msg = f"Error trying to send data to the server!\nError: {socket_e} Data: {data}"
+
 class CommandShouldStartWithBackslashError(Exception):
     def __init__(self, user_input):
         self.user_input = user_input

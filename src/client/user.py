@@ -45,7 +45,6 @@ class User:
             return False
 
     def is_registered(self) -> bool:
-        self.registered = bool(self.nickname) and bool(self.username)
         return self.registered
 
     def is_first_nick(self) -> bool:
