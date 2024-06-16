@@ -1,4 +1,5 @@
 from typing import List
+import os
 from client.client import Client
 from client.user import User
 import socket
@@ -81,6 +82,18 @@ class CommandHandler():
             self.user.default_channel = channel_name
             print(f"Congrats! You have set {channel_name} as your default channel!")
 
+    def disconnect(self, reason:str = None):
+        if self.client.connected:
+            self.__send_to_server(self.__format_quit_msg(reason))
+            self.client.server_socket.close()
+            self.client.connected = False
+        else:
+            raise CommandOnlyUsableConnectedError("/disconnect")
+
+    def quit(self, reason:str):
+        self.client.server_socket.close()
+        os._exit(0)     
+
     def join(self, channel_name:str):
         pass
 
@@ -100,9 +113,11 @@ class CommandHandler():
     def __format_names_msg(self, channel_name:str):
         return f'NAMES {channel_name}\r\n'.encode()
     
-    def __format_channels_list_msg(self, channels_list:List[str]):
-        return f'LIST {channels_list}\r\n'.encode()
-    
+    def __format_quit_msg(self, reason:str = None):
+        if not reason:
+            return f'QUIT\r\n'.encode()
+        else:
+            return f'QUIT :{reason}\r\n'.encode()
 
     def __send_to_server(self,msg):
         self.client.server_socket.sendall(msg)
