@@ -1,6 +1,7 @@
 from client.client import Client
 from shared.user import User
 from client.errors import InvalidNicknameError
+from client.channel import Channel
 
 
 class CommandHandler():
@@ -40,7 +41,20 @@ class CommandHandler():
                 print(f"Nick changed to {self.user.nickname}!")
         except InvalidNicknameError as e:
             print(e.msg)
-            
+
+
+    def list(self, channel_name:str = None):
+        if self.client.connected:
+            if not channel_name:                
+                if self.user.default_channel:
+                    channel_name = self.user.default_channel
+                else:
+                    print("U DONT HAVE DEFAULT CHANNEL")
+            self.__send_to_server(self.__format_names_msg(channel_name.encode()))                
+        else:
+            print("You are not connected to any server")
+
+
     def __format_nick_msg(self):
         return f'NICK :{self.user.nick}\r\n'
 
@@ -54,5 +68,8 @@ class CommandHandler():
         history = self.user.history
         return f'{history.nickname[len(history) - 1]} NICK {self.user.nickname}'
 
+    def __format_names_msg(self, channel_name:str):
+        return f"NAMES {channel_name}\r\n"
+    
     def __send_to_server(self,msg):
         self.client.server_socket.sendall(msg)
