@@ -7,6 +7,22 @@ class CommandHandler():
     def __init__(self, client:Client, user:User):
         self.client = client
         self.user = user
+    
+    def help(self):
+        commands = {
+            '/help': 'List all available commands with a brief description of each.',
+            '/nick': 'Change the user nickname. Usage: /nick <new_nickname>',
+            '/connect': 'Connect to the server. Usage: /connect <IP>',
+            '/disconnect': 'Disconnect from the server. Usage: /disconnect :<reason>',
+            '/quit': 'Exit the client. Usage: /quit :<reason>',
+            '/join': 'Join a channel. Usage: /join #<channel>',
+            '/leave': 'Leave a channel. Usage: /leave #<channel> <reason>',
+            '/channel': 'Select a default channel. Usage: /channel #<channel>',
+            '/list': 'List the users in a channel. Usage: /list #<channel>',
+            '/msg': 'Send a message to a channel. Usage: /msg #<channel> <message>',
+        }
+        for command, description in commands.items():
+            print(f"{command}: {description}")
    
     def motd(self, mtod):
         pass
