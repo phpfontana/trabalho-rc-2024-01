@@ -1,6 +1,6 @@
 from client.client import Client
 from client.command_handler import CommandHandler
-from shared.user import User
+from client.user import User
 
 
 class InputHandler():

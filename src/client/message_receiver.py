@@ -1,4 +1,4 @@
-from shared.user import User
+from client.user import User
 from client.client import Client
 
 class MessageReceiver():
