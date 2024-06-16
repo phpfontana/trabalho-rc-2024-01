@@ -34,13 +34,13 @@ class MessageReceiver():
 
         match command_or_code:
             case b"NICK":
-                return b"COMMAND: NICK"
+                self.handle_code_nick(message)
             case b"PING":
                 return b"COMMAND: PING"
             case b"PONG":
                 return b"COMMAND: PONG"
             case b"JOIN":
-                return b"COMMAND: JOIN"
+                self.handle_code_join(message)
             case b"PART":
                 return b"COMMAND: PART"
             case b"QUIT":
@@ -62,11 +62,11 @@ class MessageReceiver():
             case b"376":
                 return b"CODE: 376"
             case b"403":
-                return b"CODE: 403"
+                self.handle_code_403(message)
             case b"353":
-                return b"CODE: 353"
+                self.handle_code_353(message)
             case b"366":
-                return b"CODE: 366"
+                self.handle_code_366(message)
             case b"442":
                 return b"CODE: 442"
             case _:
@@ -77,6 +77,26 @@ class MessageReceiver():
         self.client.user.registered = True
         welcome_msg = message.split(b" ")[2]
         print(welcome_msg)
+
+    def handle_code_nick(self, message: bytearray):
+        nick = message.split(b" ")[2]
+        self.client.user.set_nickname(nick)
+        print(message.decode())
+
+    def handle_code_join(self, message: bytearray):
+        print(message.decode())
+
+    def handle_code_403(self, message: bytearray):
+        message = message.split(b" ", 3)[3]
+        print(message.decode())
+
+    def handle_code_353(self, message: bytearray):
+        message = message.split(b" ", 4)[4]
+        print(message.decode())
+
+    def handle_code_366(self, message: bytearray):
+        message = message.split(b" ", 3)[3]
+        print(message.decode())
 
     def listen_server_messages(self):
         while(True):
