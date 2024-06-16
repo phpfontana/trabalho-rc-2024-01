@@ -78,7 +78,6 @@ class MessageReceiver():
         welcome_msg = message.split(b" ")[2]
         print(welcome_msg)
 
-
     def listen_server_messages(self):
         while(True):
             processed_message = self.wait_for_message()
