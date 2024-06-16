@@ -83,6 +83,9 @@ class CommandHandler():
     def __format_nick_change_msg(self):
         history = self.user.history
         return f'{history.nickname[len(history) - 1]} NICK {self.user.nickname}'
+    
+    def __format_names_msg(self, channel_name:str):
+        return f'NAMES {channel_name}\r\n'.encode()
 
     def __send_to_server(self,msg):
         self.client.server_socket.sendall(msg)
