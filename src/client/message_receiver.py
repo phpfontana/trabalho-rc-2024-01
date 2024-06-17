@@ -1,11 +1,11 @@
 from client.user import User
-from client.client import Client
 from client.processed_message import ProcessedMessage
+from datetime import datetime
 from client.errors import Errors
 import logging
 
 class MessageReceiver():
-    def __init__(self, client:Client, user:User, logger):
+    def __init__(self, client, user:User, logger):
         self.client = client
         self.user = user
         self.buffer = bytearray()
@@ -14,7 +14,9 @@ class MessageReceiver():
 
     def wait_for_message(self) -> ProcessedMessage:
         try:
+            data_chunk = bytearray()
             if not self.buffer:
+                print("banana")
                 data_chunk = self.client.server_socket.recv(512)
                 self.logger.log_colored.in_(logging.INFO, data_chunk)
                 if data_chunk == b"":
@@ -24,14 +26,13 @@ class MessageReceiver():
             self.buffer = processed_message.remaining_buffer
             self.message_history.append(processed_message)
             return processed_message
-        except Errors.NoEndMessageCharsFoundError:
-            return False
+        except Exception as e:
+            print(e)
 
 
     def __handle_server_response(self, processed_message):
-        message = self.message
-        command_or_code = self.command_or_code
-
+        message = processed_message 
+        command_or_code = processed_message
         match command_or_code:
             case b"NICK":
                 self.handle_code_nick(message)
@@ -44,17 +45,15 @@ class MessageReceiver():
             case b"PART":
                 self.handle_part(message)
             case b"QUIT":
-                return b"COMMAND: QUIT"
+                self.handle_quit(message)
             case b"PRIVMSG":
-                return b"COMMAND: PRIVMSG"
-            case b"NAMES":
-                return b"COMMAND: NAMES"
+                self.handle_privmsg(message)
             case b"001":
                 self.handle_001(message)
             case b"433":
                 self.handle_433(message)
             case b"432":
-                return b"CODE: 432"
+                self.handle_432(message)
             case b"375" | b"372" | b"376":
                 self.handle_375_372_376(message)
             case b"403":
@@ -119,6 +118,10 @@ class MessageReceiver():
     def handle_code_366(self, message: bytearray):
         message = message.split(b" ", 3)[3]
         print(message.decode())
+
+    def print_msg(self, nickname: str, channel_name: str, msg: str):
+        hour_minute = datetime.now().strftime("%H:%M")
+        print(f"{hour_minute} [{channel_name}] <{nickname}> {msg}\r\n")
 
     def listen_server_messages(self):
         while(True):

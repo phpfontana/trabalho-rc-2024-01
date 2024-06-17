@@ -4,7 +4,7 @@ from client.client import Client
 
 def main():
     c = Client()
-    c.input_handler.listen_command_input()
+    c.start()
 
 
 
