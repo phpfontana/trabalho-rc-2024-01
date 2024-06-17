@@ -3,28 +3,31 @@
 ## 1. Visão geral
 **Nome do Projeto:** Internet Relay Chat (IRC)
 
-**Descrição:** Este projeto é uma implementação de um servidor IRC que permite aos usuarios se conectarem em canais e se cmunicarem usando vários comandos.
+**Descrição:** Este projeto é uma implementação de um servidor IRC que permite aos usuarios se conectarem em canais e se comunicarem usando vários comandos.
 
 ## 2. Modulos
 
 ### 2.1 Modulo Server
 
+#### 2.1.0 `Paradigma de objetos anemicos`
+Foi utilizado no servidor um paradigma de orientação a objetos com objetos anemicos, ou seja, os objetos que representam entidades como users ou channels guardam apenas seus dados e algumas funções de utilidades e são no geral "burros", pois não gerenciam seu proprio estado no contexto do servidor como um todo.
+
 #### 2.1.1 `server.py`
-A classe `Server` é a classe principal que inicializa e executa o servidor IRC. Ela é responsável por genrenciar as conexões dos clientes, canais e processa comandos do cliente.
+A classe `Server` é a classe principal que inicializa e executa o servidor IRC. Ela é responsável por genrenciar as entidades globais do servidor (channels, users, connections, motd etc)
 
 **Atributos:**
 - `port`: O número da porta na qual o servidor escuta.
-- `connections`: Um deque que armazena as conexões ativas.
+- `connections`: Uma deque que armazena as conexões ativas.
 channels: Uma lista de canais disponíveis.
 - `motd`: Mensagem do dia enviada aos clientes após a conexão.
 - `command_handler`: Uma instância de CommandHandler para lidar com comandos.
-- `logger`: Uma instância de Logger para logging.
+- `logger`: Uma instância de Logger para logging que pode ser ativada em diferentes niveis.
 
 **Métodos:**
 - `__init__(self, motd, port, enable_log, log_level)`: Inicializa o servidor com os parâmetros fornecidos.
-- `client_thread_loop(self, connection)`: Loop principal para lidar com mensagens dos clientes.
+- `client_thread_loop(self, connection)`: Loop responsavel por atender a conexão de um cliente dos clientes.
 - `listen(self)`: Inicia o servidor e escuta por conexões.
-- `message_handler(self, connection, message)`: Lida com diferentes comandos IRC.
+- `message_handler(self, connection, message)`: Lida com as diferentes mensagens IRC passando as para o command_handler que lida com todos os detalhes do comando.
 - `disconnect_user(self, user, connection)`: Desconecta um usuário e limpa os recursos.
 - `is_nickname_free(self, nickname)`: Verifica se um apelido já está em uso.
 - `find_channel_by_name(self, channel_name)`: Encontra um canal pelo nome.
@@ -33,7 +36,7 @@ channels: Uma lista de canais disponíveis.
 - `start(self)`: Inicia o servidor.
 
 #### 2.1.2 `connection.py`
-A classe `Connection` representa uma conexão de cliente com o servidor IRC. Ela é responsável por gerenciar a comunicação entre o cliente e o servidor, incluindo o envio e recebimento de dados e o processamento de mensagens.
+A classe `Connection` representa uma conexão de cliente com o servidor IRC. Ela é responsável por receber mensagens de uma conexeão e fazer um processamento inicial da mensagem (separar comando e parametros)
 
 **Atributos:**
 - `__server`: Referência ao servidor principal.
@@ -54,7 +57,7 @@ A classe `Connection` representa uma conexão de cliente com o servidor IRC. Ela
 
 #### 2.1.3 `command_handler.py`
 
-A classe `CommandHandler` é responsável por processar os comandos recebidos dos clientes e gerar as mensagens apropriadas para serem enviadas de volta. Ela interage com outras partes do servidor para gerenciar usuários, canais e mensagens.
+A classe `CommandHandler` é responsável por processar os comandos recebidos dos clientes e gerar as mensagens apropriadas para serem enviadas de volta. Ela interage com outras partes do servidor para gerenciar usuários, canais e mensagens. Após realizar todas as ações necessarias para um comando ela gera a mensagem a ser enviada para as conexões corretas e retorna as mesmas para que sejam enviadas pelo servidor na thread/looping que atende a conexão especifica.
 
 **Atributos:**
 - `__server`: Referência ao servidor principal.
@@ -104,9 +107,16 @@ A classe `User` representa um usuário conectado ao servidor IRC. Ela armazena i
 - `__is_only_alphanum_or_underline(self, nickname_without_first_letter: str) -> bool`: Verifica se uma string contém apenas caracteres alfanuméricos ou sublinhados (sem contar a primeira letra).
 
 ### 2.2 Modulo Client
+
+#### 2.1.0 `Paradigma de objetos mais inteligentes`
+Diferentemente do servidor, no client foi seguinda a ideia de uma orientação a objeto menos anemica onde os objetos não só guardam funções de utilidade e seus dados, mas são responsaveis por gerenciar seu estado de maneira maior do que a presente no servidor, são objetos menos "burros".
+
+No client caso seja digitado algo sem "/" o texto digitado sera considerado um /msg para o canal padrão.
+
+Deve ser setado um nick antes de tentar se conectar com um servidor.
 #### 2.2.1 `client.py`
 
-A classe `Client` representa um cliente que se conecta a um servidor IRC. Ele é responsável por gerenciar a conexão com o servidor, manipular a entrada do usuário e receber mensagens do servidor.
+A classe `Client` representa o cliente IRC. Ela é responsável por gerenciar o estado de coisas globais do client e inicializar as 3 threads principais que formam toda a funcionalidade do client: envio de pings, manipular a entrada do usuário e receber mensagens do servidor. 
 
 **Atributos:**
 - `connected`: Indica se o cliente está conectado ao servidor.
@@ -129,7 +139,7 @@ A classe `Client` representa um cliente que se conecta a um servidor IRC. Ele é
 
 #### 2.2.2 `command_handler.py`
 
-A classe `CommandHandler` é responsável por gerenciar os comandos enviados pelo cliente. Ela processa os comandos e envia as mensagens apropriadas ao servidor IRC.
+A classe `CommandHandler` é responsável por gerenciar os comandos digitados pelo usuario. Ela processa os comandos e envia as mensagens apropriadas ao servidor IRC.
 
 **Atributos:**
 - `client`: Instância do cliente que está conectado ao servidor.
@@ -202,15 +212,7 @@ python3 src/_client.py
 **Conectando ao Servidor**
 * Dentro do terminal do client, utilize o seguinte comando:
 ```sh 
-/connect <server-ip> 6667
-```
-
-```python
-17:24 -!- Welcome to the Internet Relay Network novo_nick
-17:24 -!- [server] - 127.0.0.1 Message of the Day -
-17:24 -!- [server] - Here we love overengeneering and unnecessary complexity 
-          leading to bad code!
-17:24 -!- [server] End of /MOTD command.
+/connect <server-ip> <port>
 ```
 
 **Comandos Comuns:**
@@ -269,5 +271,7 @@ python3 src/_client.py
 A aplicação usa classes de erro personalizadas definidas em `errors.py` para lidar com vários erros, como apelidos inválidos, problemas de conexão e erros de canal. Esses erros são registrados adequadamente e mensagens são enviadas aos clientes para informá-los sobre os erros.
 
 ## 5. Logging
-A aplicação usa uma classe `Logger` personalizada para lidar com logging. Ela registra mensagens com diferentes níveis de severidade (INFO, DEBUG, ERROR) e pode registrar mensagens coloridas para melhor legibilidade.
-
+A aplicação usa uma classe `Logger` personalizada para lidar com logging. Ela registra mensagens com diferentes níveis de severidade (INFO, DEBUG, ERROR).
+no modo **info** o logger conta com prints que mostram em verde o que entra (o que chegou no cliente ou servidor) e em laranja o que saiu.
+no modo **debug** o logger conta com todos os prints de debug usados ao longo do desenvolvimento para entender o fluxo dos dados e funcionamento da aplicação.
+Obs: O logger não conta com nenhum jeito de configuralo via parametros, mas pode ser facilmente mudado no codigo atraves da passagem de um parametro booleano que realiza a desativação completa do logger. (Não deu tempo kk)
