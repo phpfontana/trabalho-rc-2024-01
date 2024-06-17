@@ -23,7 +23,7 @@ class CommandHandler:
         commands = {
             "/help": "List all available commands with a brief description of each.",
             "/nick": "Change the user nickname. Usage: /nick <new_nickname>",
-            "/connect": "Connect to the server. Usage: /connect <IP>",
+            "/connect": "Connect to the server. Usage: /connect <IP> <PORT>",
             "/disconnect": "Disconnect from the server. Usage: /disconnect :<reason>",
             "/quit": "Exit the client. Usage: /quit :<reason>",
             "/join": "Join a channel. Usage: /join #<channel>",
