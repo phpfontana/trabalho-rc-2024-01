@@ -126,7 +126,6 @@ class CommandHandler:
     def join(self, channel_name: str):
         if self.client.connected:
             try:
-                new_channel = Channel(channel_name)
                 self.user.join_channel(new_channel)
                 self.__send_to_server(self.__format_join_msg(channel_name))
             except InvalidChannelNameError as e:

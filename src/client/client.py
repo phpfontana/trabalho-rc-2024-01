@@ -26,6 +26,7 @@ class Client():
         _socket.connect(server_addr)
         self.server_socket = _socket
         self.host, self.port = _socket.getsockname()
+        self.logger.log.debug("startou a thread")
         start_new_thread(self.server_listener_thread, ())
 
     def start(self):

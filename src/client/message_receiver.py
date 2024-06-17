@@ -3,6 +3,7 @@ from client.processed_message import ProcessedMessage
 from datetime import datetime
 from client.errors import Errors
 import logging
+from client.channel import Channel
 
 class MessageReceiver():
     def __init__(self, client, user:User, logger):
@@ -13,26 +14,21 @@ class MessageReceiver():
 
 
     def wait_for_message(self) -> ProcessedMessage:
-        try:
-            data_chunk = bytearray()
-            if not self.buffer:
-                print("banana")
-                data_chunk = self.client.server_socket.recv(512)
-                self.logger.log_colored.in_(logging.INFO, data_chunk)
-                if data_chunk == b"":
-                    raise Errors.Connection.ConnectionClosedByPeer(self)
-            self.buffer.extend(data_chunk)
-            processed_message = ProcessedMessage(self.buffer, self.__server.logger)
-            self.buffer = processed_message.remaining_buffer
-            self.message_history.append(processed_message)
-            return processed_message
-        except Exception as e:
-            print(e)
+        data_chunk = bytearray()
+        if not self.buffer:
+            data_chunk = self.client.server_socket.recv(512)
+            self.logger.log_colored.in_(logging.INFO, data_chunk)
+            if data_chunk == b"":
+                raise Errors.Connection.ConnectionClosedByPeer(self)
+        self.buffer.extend(data_chunk)
+        processed_message = ProcessedMessage(self.buffer, self.logger)
+        self.buffer = processed_message.remaining_buffer
+        return processed_message
 
 
     def __handle_server_response(self, processed_message):
-        message = processed_message 
-        command_or_code = processed_message
+        message = processed_message.message
+        command_or_code = processed_message.command_or_code
         match command_or_code:
             case b"NICK":
                 self.handle_code_nick(message)
@@ -49,6 +45,7 @@ class MessageReceiver():
             case b"PRIVMSG":
                 self.handle_privmsg(message)
             case b"001":
+                self.logger.log.debug(message)
                 self.handle_001(message)
             case b"433":
                 self.handle_433(message)
@@ -80,23 +77,24 @@ class MessageReceiver():
         print(message.decode())
 
     def handle_375_372_376(self, message):
-        print(message.split(" ",3)[3].decode())
+        self.logger.log.debug(message)
+        print(message.split(b" ",3)[3].decode())
 
     def handle_442(self, message):
-        print(message.split(" ",3)[3].decode())
+        print(message.split(b" ",3)[3].decode())
     
     def handle_432(self, message: bytearray):
-        nick_in_use_msg = message.split(" ")[3]
+        nick_in_use_msg = message.split(b" ")[3]
         print(nick_in_use_msg)
 
     def handle_433(self, message: bytearray):
-        nick_in_use_msg = message.split(" ")[3]
+        nick_in_use_msg = message.split(b" ")[3]
         print(nick_in_use_msg)
 
     def handle_001(self, message: bytearray):
         self.client.user.registered = True
         self.client.connected = True
-        welcome_msg = message.split(b" ")[2]
+        welcome_msg = message.split(b" ",2)[2].decode()
         print(welcome_msg)
 
     def handle_code_nick(self, message: bytearray):
@@ -105,6 +103,7 @@ class MessageReceiver():
         print(message.decode())
 
     def handle_code_join(self, message: bytearray):
+        new_channel = Channel(channel_name)
         print(message.decode())
 
     def handle_code_403(self, message: bytearray):
@@ -126,4 +125,6 @@ class MessageReceiver():
     def listen_server_messages(self):
         while(True):
             processed_message = self.wait_for_message()
+            self.logger.log.debug(processed_message.message)
+            self.logger.log.debug(processed_message.command_or_code)
             self.__handle_server_response(processed_message)
