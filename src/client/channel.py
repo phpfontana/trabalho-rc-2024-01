@@ -9,12 +9,13 @@ class Channel:
 
     def __init__(self, channel_name:str):
         self.options = self.Options()
-        self.name = self.set_channel_name(channel_name)
+        self.set_channel_name(channel_name)
         self.users: List[User] = []
 
     def set_channel_name(self, channel_name:str):
         if self.__is_valid_channel_name(channel_name):
             self.name = channel_name
+            print(self.name)
         else:
             raise InvalidChannelNameError(channel_name)
 

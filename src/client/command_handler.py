@@ -36,6 +36,9 @@ class CommandHandler:
             print(f"{command}: {description}")
 
     def connect(self, addr):  # TODO Exception already connected to server
+        if self.client.connected:
+            print("Voce ja esta conectado!")
+            return
         if not self.user.nickname:
             print("Set a nickname before connection")
             return
@@ -43,6 +46,7 @@ class CommandHandler:
         while retry:
             try:
                 retry -= 1
+                self.client.message_receiver.close = False
                 self.client.connect_to_server((addr))
                 self.__send_to_server(self.__format_registration_msg())
                 return
@@ -70,7 +74,7 @@ class CommandHandler:
         if self.client.connected:
             if not channel_name:
                 if self.user.default_channel:
-                    channel_name = self.user.default_channel
+                    channel_name = self.user.default_channel.name
                 else:
                     print("U DONT HAVE DEFAULT CHANNEL")
                     return
@@ -86,7 +90,7 @@ class CommandHandler:
                 else:
                     print("U DONT HAVE DEFAULT CHANNEL")
                     return
-            self.print_msg(channel_name, self.user, msg)
+            self.print_msg(self.user.nickname, channel_name, msg)
             self.__send_to_server(self.__format_privmsg_msg(channel_name, msg))
         else:
             raise CommandOnlyUsableConnectedError("/list")
@@ -106,32 +110,36 @@ class CommandHandler:
     def disconnect(self, reason: str = None):
         if self.client.connected:
             self.__send_to_server(self.__format_quit_msg(reason))
+            self.client.message_receiver.close = True
             self.client.server_socket.close()
             self.client.connected = False
         else:
             raise CommandOnlyUsableConnectedError("/disconnect")
 
-    def quit(self, reason: str):
+    def quit(self, reason: str= None):
+        self.disconnect(reason)
         self.client.server_socket.close()
         os._exit(0)
 
     def leave(self, channel_name: str, reason: str = None):
         if self.client.connected:
             if not channel_name:
-                channel_name = self.user.default_channel
+                channel_name = self.user.default_channel.name
             self.__send_to_server(self.__format_part_msg(channel_name, reason))
         else:
-            raise CommandOnlyUsableConnectedError("/disconnect")
+            raise CommandOnlyUsableConnectedError("/leave")
 
     def join(self, channel_name: str):
         if self.client.connected:
             try:
-                self.user.join_channel(new_channel)
+                Channel(channel_name) # For checking the name only
                 self.__send_to_server(self.__format_join_msg(channel_name))
             except InvalidChannelNameError as e:
                 print(e.msg)
+            except InvalidChannelNameError as e:
+                print(e.msg)
         else:
-            raise CommandOnlyUsableConnectedError("/disconnect")
+            raise CommandOnlyUsableConnectedError("/join")
 
     def print_msg(self, nickname: str, channel_name: str, msg: str):
         hour_minute = datetime.now().strftime("%H:%M")

@@ -1,14 +1,16 @@
 from client.user import User
 from client.processed_message import ProcessedMessage
 from datetime import datetime
+from client.errors import InvalidChannelNameError
 from client.errors import Errors
 import logging
 from client.channel import Channel
 
 class MessageReceiver():
-    def __init__(self, client, user:User, logger):
+    def __init__(self, client, user:User, logger, close=False):
         self.client = client
         self.user = user
+        self.close = close
         self.buffer = bytearray()
         self.logger = logger
 
@@ -65,10 +67,14 @@ class MessageReceiver():
                 return None
 
     def handle_ping(self, message):
-        self.client.server_socket.sendall("PONG " + message.split(" ")[1])
+        self.client.server_socket.sendall("PONG " + message.split(b" ")[1])
 
     def handle_privmsg(self, message):
-        message.split(b" ")
+        splited_priv = message.split(b" ",3)
+        nickname = splited_priv[0][1:].decode()
+        channel_name = splited_priv[2][1:].decode()
+        msg = splited_priv[3].decode()
+        self.print_msg(nickname, channel_name, msg)
 
     def handle_quit(self, message):
         print(message.decode())
@@ -84,11 +90,11 @@ class MessageReceiver():
         print(message.split(b" ",3)[3].decode())
     
     def handle_432(self, message: bytearray):
-        nick_in_use_msg = message.split(b" ")[3]
+        nick_in_use_msg = message.split(b" ",2)[2].decode()
         print(nick_in_use_msg)
 
     def handle_433(self, message: bytearray):
-        nick_in_use_msg = message.split(b" ")[3]
+        nick_in_use_msg = message.split(b" ",2)[2].decode()
         print(nick_in_use_msg)
 
     def handle_001(self, message: bytearray):
@@ -103,11 +109,20 @@ class MessageReceiver():
         print(message.decode())
 
     def handle_code_join(self, message: bytearray):
-        new_channel = Channel(channel_name)
-        print(message.decode())
-
+        try:
+            splited_join = message.split(b" ")
+            channel_name = splited_join[2][1:]
+            self.logger.log.debug(channel_name)
+            new_channel = Channel(channel_name.decode())
+            self.client.user.join_channel(new_channel)
+            print(message.decode())
+        except InvalidChannelNameError as e:
+            print(e.msg)
+            
     def handle_code_403(self, message: bytearray):
+        self.logger.log.debug(message)
         message = message.split(b" ", 3)[3]
+        self.logger.log.debug(message)
         print(message.decode())
 
     def handle_code_353(self, message: bytearray):
@@ -123,8 +138,11 @@ class MessageReceiver():
         print(f"{hour_minute} [{channel_name}] <{nickname}> {msg}\r\n")
 
     def listen_server_messages(self):
-        while(True):
-            processed_message = self.wait_for_message()
+        while(not self.close):
+            try:
+                processed_message = self.wait_for_message()
+            except Errors.Connection.ConnectionClosedByPeer:
+                self.close = True
             self.logger.log.debug(processed_message.message)
             self.logger.log.debug(processed_message.command_or_code)
             self.__handle_server_response(processed_message)

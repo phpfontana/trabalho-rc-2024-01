@@ -3,7 +3,7 @@
 from client.client import Client
 
 def main():
-    c = Client()
+    c = Client(enabled=True)
     c.start()
 
 

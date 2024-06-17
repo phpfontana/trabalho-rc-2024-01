@@ -13,8 +13,11 @@ class ProcessedMessage:
 
 
     def find_three_digits_or_irc_command_bytes(self, message):
-        if message[0] == b":":
-            splited_message = message.split(" ")
+        self.logger.log.debug(message)
+        self.logger.log.debug(message[0])
+        if message[0] == 58:
+            self.logger.log.debug("entrei")
+            splited_message = message.split(b" ")
             if splited_message[1] == b"NICK":
                 return b"NICK"
             if splited_message[1] == b"PRIVMSG":
@@ -25,6 +28,18 @@ class ProcessedMessage:
                 return b"PART"
             if splited_message[1] == b"JOIN":
                 return b"JOIN"
+            self.logger.log.debug("baixo")
+            splited_message = message.split(b" ",1)
+            self.logger.log.debug(splited_message)
+            three_digits_pattern = rb'(?<!\d)\d{3}(?!\d)'
+            irc_commands_pattern = rb'\b(USER|NICK|PING|PONG|JOIN|PART|QUIT|PRIVMSG|NAMES)\b'
+            combined_pattern = re.compile(rb'%s|%s' % (three_digits_pattern, irc_commands_pattern))
+            match = combined_pattern.search(splited_message[1])
+            if match:
+                return match.group(0)
+            else:
+                return None
+        self.logger.log.debug("reto")
         three_digits_pattern = rb'(?<!\d)\d{3}(?!\d)'
         irc_commands_pattern = rb'\b(USER|NICK|PING|PONG|JOIN|PART|QUIT|PRIVMSG|NAMES)\b'
         combined_pattern = re.compile(rb'%s|%s' % (three_digits_pattern, irc_commands_pattern))

@@ -9,13 +9,13 @@ from client.input_handler import InputHandler
 from client.message_receiver import MessageReceiver
 
 class Client():
-    def __init__(self, ip=""):
+    def __init__(self, ip="", enabled=False):
         self.connected = False
         self.host = None
         self.port = None
         self.server_socket = None
         self.ping_socket = None
-        self.logger = Logger(level=logging.DEBUG)
+        self.logger = Logger(level=logging.DEBUG, enabled=enabled)
         self.user = User()
         self.input_handler = InputHandler(self, self.user, self.logger)
         self.message_receiver = MessageReceiver(self, self.user, self.logger)
